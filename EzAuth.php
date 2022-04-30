@@ -1,4 +1,5 @@
 <?php
+namespace elmyrockers\EzAuth;
 //NotORM - For database handling and manipulation
 //Smarty - for email body template and
 //PHPMailer - to send email
