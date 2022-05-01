@@ -1,5 +1,5 @@
 <?php
-namespace elmyrockers\EzAuth;
+namespace elmyrockers;
 //NotORM - For database handling and manipulation
 //Smarty - for email body template and
 //PHPMailer - to send email
@@ -23,12 +23,14 @@ class EzAuth
 	private $db;
 	private $tpl;
 	private $mail;
+	private $flash;
 	function __construct(array $params )
 	{
 		foreach ( $params as $object ) {
 			if ( $object instanceof NotORM ) $this->db = $object;
 			elseif ( $object instanceof Smarty ) $this->tpl = $object;
 			elseif ( $object instanceof PHPMailer ) $this->mail = $object;
+			elseif ( $object instanceof EzFlash ) $this->flash = $object;
 		}
 
 		$this->cookieConfig[ 'expires' ] = time()+(60*60*24*7); //1 week
@@ -173,7 +175,7 @@ class EzAuth
 	private function _redirectCallback( $redirectTo, $dbRow = [], $errorInfo = '' )
 	{
 		//Set error message
-			if ( $errorInfo ) flash_error( $errorInfo );
+			if ( $errorInfo ) $this->flash['danger'] = $errorInfo;
 
 		//Redirect to
 			if ( is_string($redirectTo) && !empty($redirectTo) ) { // string
@@ -310,14 +312,14 @@ class EzAuth
 					$user->delete();
 					$this->_redirectCallback( $redirectTo, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
 				} else {
-					flash_success( 'A verification link has been sent to your email.' );
+					$this->flash[ 'success' ] = 'A verification link has been sent to your email.';
 					$this->_redirectCallback( $redirectTo, $user );
 					return;
 				}
 			}
 
 		# Redirect user to other page & display success message
-			flash_success( 'You have been registered successfully' );
+			$this->flash[ 'success' ] = 'You have been registered successfully' ;
 			$this->_redirectCallback( $redirectTo, $user );
 	}
 
@@ -365,7 +367,7 @@ class EzAuth
 		# Make sure the email did not yet verified
 			// var_dump( $user['verified'] );
 			if ( $user['verified'] ) {
-				flash_success( 'Your email has been verified' );
+				$this->flash[ 'success' ] = 'Your email has been verified';
 				$this->_redirectCallback( $redirectTo, $user );
 				return;
 			}
@@ -378,7 +380,7 @@ class EzAuth
 			}
 
 		# Redirect user or execute callback
-			flash_success( 'Your email has been verified successfully' );
+			$this->flash[ 'success' ] = 'Your email has been verified successfully';
 			$this->_redirectCallback( $redirectTo, $user );
 	}
 
@@ -457,7 +459,7 @@ class EzAuth
 			if ( !$result ) {
 				$this->_redirectCallback( $redirectTo, $user, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
 			} else {
-				flash_success( 'A link to reset your password has been sent to your email.' );
+				$this->flash[ 'success' ] = 'A link to reset your password has been sent to your email.';
 				$this->_redirectCallback( $redirectTo, $user );
 			}
 
@@ -510,7 +512,7 @@ class EzAuth
 			}
 
 		# Redirect user or execute callback
-			flash_success( 'Your password was successfully changed' );
+			$this->flash[ 'success' ] = 'Your password was successfully changed';
 			$this->_redirectCallback( $redirectTo, $user );
 	}
 
@@ -523,7 +525,7 @@ class EzAuth
 			$this->_removeToken();
 		
 		# Redirect the user to other location and display message
-			flash_success( 'You have successfully logged out!' );
+			$this->flash[ 'success' ] = 'You have successfully logged out!';
 			$this->_redirectCallback( $redirectTo );
 	}
 
