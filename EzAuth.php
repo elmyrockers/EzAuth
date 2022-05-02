@@ -183,7 +183,7 @@ class EzAuth
 		//Callback
 			} elseif ( is_callable($redirectTo) ) { // callable
 				
-				$bound = new stdClass;
+				$bound = new \stdClass;
 				$bound->hasError = (bool) $errorInfo;
 				$bound->errorInfo = $errorInfo;
 				$bound->get = $_GET;
@@ -278,7 +278,7 @@ class EzAuth
 	public function register( $redirectTo, $verifyEmail = false, $verificationPage = '' ) // need username, email & password input
 	{
 		if ( $verifyEmail && !$verificationPage ) {
-			throw new Exception( '$confirmationPage parameter can\'t be empty', 1 );
+			throw new \Exception( '$confirmationPage parameter can\'t be empty', 1 );
 		}
 		
 		# Make sure register form has been sent first
@@ -349,8 +349,8 @@ class EzAuth
 			// var_dump($user);
 		
 		# Make sure created time does not exceed 23 hours 59 minutes
-			$registeredTime = new DateTime( $user['created'] );
-			$now = new DateTime();
+			$registeredTime = new \DateTime( $user['created'] );
+			$now = new \DateTime();
 			$diff = $registeredTime->diff( $now );
 			$days = $diff->d;
 			$hours = $diff->h;
