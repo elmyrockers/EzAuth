@@ -27,10 +27,10 @@ class EzAuth
 	function __construct(array $params )
 	{
 		foreach ( $params as $object ) {
-			if ( $object instanceof NotORM ) $this->db = $object;
-			elseif ( $object instanceof Smarty ) $this->tpl = $object;
-			elseif ( $object instanceof PHPMailer ) $this->mail = $object;
-			elseif ( $object instanceof EzFlash ) $this->flash = $object;
+			if ( $object instanceof \NotORM ) $this->db = $object;
+			elseif ( $object instanceof \Smarty ) $this->tpl = $object;
+			elseif ( $object instanceof \PHPMailer\PHPMailer\PHPMailer ) $this->mail = $object;
+			elseif ( $object instanceof \elmyrockers\EzFlash ) $this->flash = $object;
 		}
 
 		$this->cookieConfig[ 'expires' ] = time()+(60*60*24*7); //1 week
@@ -105,8 +105,8 @@ class EzAuth
 
 		//3. Save both 'selector' and 'code' to 'auth_token' table in database
 			$code_hash = password_hash( $code, PASSWORD_DEFAULT );
-			$expiry = new NotORM_Literal( 'NOW()+INTERVAL 7 DAY' );
-			$now = new NotORM_Literal( 'NOW()' );
+			$expiry = new \NotORM_Literal( 'NOW()+INTERVAL 7 DAY' );
+			$now = new \NotORM_Literal( 'NOW()' );
 			$created = $now;
 			$modified = $now;
 			$authToken = $this->db->auth_token()->insert(compact( 'user_id','selector', 'code_hash', 'expiry', 'created', 'modified' ));
@@ -294,7 +294,7 @@ class EzAuth
 			if ( $verifyEmail ) $_POST[ 'code' ] = hash( 'sha256', $_POST['username'].$_POST['email'].microtime() );//sha256 algorithm
 
 		# Save user data into 'user' table in database
-			$now = new NotORM_Literal( 'NOW()' );
+			$now = new \NotORM_Literal( 'NOW()' );
 			$_POST[ 'created' ] = $now;
 			$_POST[ 'modified' ] = $now;
 			$_POST[ 'password' ] = password_hash( $_POST[ 'password' ], PASSWORD_DEFAULT ); // For password, store only its hash for security
