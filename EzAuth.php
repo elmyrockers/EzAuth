@@ -284,6 +284,11 @@ class EzAuth
 		# Make sure register form has been sent first
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
 
+		# Username and email inputs are required. So, make sure they aren't empty
+			if ( empty($_POST['username']) || empty($_POST['email']) ) {
+				$this->_redirectCallback( $redirectTo, null, 'E-mail and username are required' ); return;
+			}
+
 		# Make sure the account is not yet exists
 			$user = $this->db->user( "username=? OR email=?", $_POST['username'], $_POST['email'] )->fetch();
 			if ( $user ) {
