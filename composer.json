@@ -1,0 +1,16 @@
+{
+	"name": "elmyrockers/ezauth",
+	"description": "EzAuth PHP library - Lightweight & easy authentication library with secure 'remember me' feature for PHP. With this, you just need to write a few lines of PHP code only in each pages.",
+	"type": "library",
+	"version": "1.0.0",
+	"require": {
+		"php": ">=7.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"elmyrockers\\": ""
+		}
+	},
+	"minimum-stability": "stable",
+	"license": "MIT"
+}
