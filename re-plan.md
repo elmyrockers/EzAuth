@@ -71,7 +71,6 @@ $config = [
 	]
 ];
 $auth = new EzAuth( $config );
-$flash = $auth->flashMessage();
 $token = $auth->csrfToken();
 
 $auth->register( $callback, $flash );
