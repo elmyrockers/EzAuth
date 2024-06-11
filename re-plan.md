@@ -1,5 +1,5 @@
 
-### REQUIRE
+### REQUIRE:
 1. RedbeanPHP 			- Database
 2. PHPMailer 			- Mailer
 3. Twig 				- Template Engine (for email)
@@ -14,7 +14,7 @@
 
 
 
-### EXAMPLE
+### EXAMPLE:
 ```php
 $config = [
 	// Database
@@ -46,17 +46,20 @@ $config = [
 	],
 
 	// Flash Message - (success / error)
-		'message_language' => [ 'en', '/optional/path/to/language/directory/' ],
-		'message_template' => [
+	'message' => [
+		'language' => [ 'en', '/optional/path/to/language/directory/' ],
+		'template' => [
 			'success' => '<div class="alert alert-success">{{ message }}</div>',
 			'error' => '<div class="alert alert-danger">{{ message }}</div>'
-		],
+		]
+	],
 
 	// Authentication
 	'auth' => [
-		'domain' => '', // https://yoursite.com
 		'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
 		'allowed_fields' => [ 'username','email', 'password', 'confirm_password' ],
+
+		'domain' => '', // https://yoursite.com
 		'logout_redirect' => '/login.php',
 		'member_area' => [
 			'/member/user/', // 0 - Role: User
@@ -68,13 +71,14 @@ $config = [
 	]
 ];
 $auth = new EzAuth( $config );
+$flash = $auth->flashMessage();
+$token = $auth->csrfToken();
 
-$auth->csrfToken();
-$auth->register( $successUrl );
-$auth->verifyEmail( $successUrl );
-$auth->login();
-$auth->recoverPassword();
-$auth->resetPassword( $successUrl ); 
+$auth->register( $callback, $flash );
+$auth->verifyEmail( $callback, $flash ) );
+$auth->login( $callback, $flash );
+$auth->recoverPassword( $callback, $flash );
+$auth->resetPassword( $callback, $flash ); 
 $user = $auth->memberArea( $allowedRoles );
 $user = $auth->isLoggedIn();
 // $auth->redirectLoggedInUser();
