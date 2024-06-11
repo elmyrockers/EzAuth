@@ -1,5 +1,5 @@
 
-# REQUIRE
+### REQUIRE
 1. RedbeanPHP 			- Database
 2. PHPMailer 			- Mailer
 3. Twig 				- Template Engine (for email)
@@ -14,7 +14,7 @@
 
 
 
-
+### EXAMPLE
 ```php
 $config = [
 	// Database
