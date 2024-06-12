@@ -65,7 +65,7 @@ $config = [
 			'/member/user/', // 0 - Role: User
 			'/member/admin/', // 1 - Role: Admin
 			'/member/superadmin/' // 2 - Role: Super-Admin
-		]
+		],
 		'verify_email' => '',  // Specify page for email verification
 		'reset_password' => '' // Specify page for reset password
 	]
