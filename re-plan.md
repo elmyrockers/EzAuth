@@ -72,12 +72,13 @@ $config = [
 ];
 $auth = new EzAuth( $config );
 $token = $auth->csrfToken();
+$flash = $auth->flashMessage();
 
-$auth->register( $callback, $flash );
-$auth->verifyEmail( $callback, $flash ) );
-$auth->login( $callback, $flash );
-$auth->recoverPassword( $callback, $flash );
-$auth->resetPassword( $callback, $flash ); 
+$auth->register( $callback );
+$auth->verifyEmail( $callback ) );
+$auth->login( $callback );
+$auth->recoverPassword( $callback );
+$auth->resetPassword( $callback ); 
 $user = $auth->memberArea( $allowedRoles );
 $user = $auth->isLoggedIn();
 // $auth->redirectLoggedInUser();
