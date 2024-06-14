@@ -21,6 +21,7 @@
 	"license": "MIT",
 	"require-dev": {
 		"phpunit/phpunit": "^11.2",
-		"symfony/var-dumper": "^7.1"
+		"symfony/var-dumper": "^7.1",
+		"symfony/error-handler": "^7.1"
 	}
 }
