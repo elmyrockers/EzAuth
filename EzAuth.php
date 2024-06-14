@@ -1,13 +1,13 @@
 <?php
 namespace elmyrockers;
 
-require_once 'vendor/autoload.php';
 use \RedBeanPHP\R as R;
 use elmyrockers\EzFlash;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception as Mail_Exception;
-
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 /**
  * 
  */
@@ -81,7 +81,8 @@ class EzAuth
 						'/member/admin/', // 1 - Role: Admin
 					],
 					'verify_email' => '',  // Specify page for email verification
-					'reset_password' => '' // Specify page for reset password
+					'reset_password' => '', // Specify page for reset password
+					'secret_key' => '' // 256-bit ( bin2hex(random_bytes(32)) )
 			];
 			if ( !empty($auth) ) $auth = array_merge( $defaultAuthConfig, $auth );
 			$this->config[ 'auth' ] = $auth;
@@ -90,63 +91,80 @@ class EzAuth
 			if ( !session_id() ) session_start();
 	}
 
+	private function _callback( $callback, $user, $errorInfo = null )
+	{
+		if ( $errorInfo ) return false;
+	}
+
+	private function _sendMail($value='')
+	{
+		// code...
+	}
+
 	public function register( $callback = null )
 	{
-		return true;
+		# Make sure register form has been sent first
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
+
+		# Start form input validations. With symfony/validator
+			unset( $_POST['confirm_password'] );
+
+		# Make sure the account does not yet exists
+			$user = R::findOne( 'user', 'username=? OR email=?', [$_POST['username'],$_POST['email']] );
+			if ( $user ) return $this->_callback( $callback, $user, 'E-mail or username already exists in our system' );
+
+		# If user's email has to be validated, generate secret code
+			$code = null; $email_verified = 1;
+			$verify_email = $this->config[ 'auth' ][ 'verify_email' ] ?? null ;
+			if ( $verify_email ) {
+				$code = bin2hex(random_bytes(16));
+				$email_verified = 0;
+			}
+
+		# Save user data into 'user' table in database
+			$user = R::dispense( 'user' )->import( $_POST );
+			$user[ 'password' ] = password_hash( $user['password'], PASSWORD_DEFAULT ); // For password, store only its hash for security
+			$user[ 'code' ] = $code;
+			$user[ 'email_verified' ] = $email_verified;
+			$user[ 'role' ] = 0;
+
+			$now = R::isoDateTime();
+			$user[ 'created' ] = $now;
+			$user[ 'modified' ] = $now;
+			// dd( $user );
+			// $userID  = R::store( $user );
+			// if ( !$userID ) return $this->_callback( $callback, null, 'Failed to register the user. Please try again.' );
+			
+			// dd( $user );
+
+		# Send a link contain secret code to user's email
+			if ( $verify_email ) {
+				// Make sure there is secret key
+					$secretKey = $this->config['auth']['secret_key'];
+					if ( !$secretKey ) throw new Exception( 'Missing secret key' );
+					
+				$domain = $this->config[ 'auth' ][ 'domain' ];
+				$now = time();
+				$payload = [
+					'iss' => $domain,
+					'aud' => $domain,
+					'iat' => $now,
+					'exp' => $now + 3600, // Valid for 1 hour
+					'email' => $user[ 'email' ],
+					'code' => $code
+				];
+				$token = JWT::encode( $payload, $secretKey, 'HS256' );
+				$verificationLink = "{$domain}/{$verify_email}?token={$token}";
+				// dd( $verificationLink );
+				$result = $this->_sendMail( [ $email, $username ], 'email_verification', compact('verificationLink','user'), $mailErrorInfo );
+				// if ( !$result ) {
+				// 	$user->delete();
+				// 	$this->_redirectCallback( $redirectTo, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
+				// } else {
+				// 	$this->flash[ 'success' ] = 'A verification link has been sent to your email.';
+				// 	$this->_redirectCallback( $redirectTo, $user );
+				// 	return;
+				// }
+			}
 	}
 }
-
-
-
-
-
-# FOR DEBUGGING PURPOSE
-// $database = [
-// 	'dsn' => 'mysql:host=localhost;dbname=ezauth',
-// 	'username' => 'root',
-// 	'password' => ''
-// ];
-// $email = [
-// 	'smtp_settings' => [
-// 		'debug' => true,
-// 		'host' => 'amazonaws.com',
-// 		'username' => 'username',
-// 		'password' => 'password',
-// 		'port' => '587',
-// 		'encryption' => 'starttls' // starttls / smtps
-// 	],
-// 	'from' => [ 'no-reply@yoursite.com', 'EzAuth' ],
-// 	'reply_to' => [ 'admin@yoursite.com', 'Admin' ],
-// 	'template_dir' => '/views/emails/',
-// 	'templates' => [
-// 		'email_verification' => [ 'subject', 'filename' ], // filename without extension (for html and plain text)
-// 		'reset_password' => [ 'subject', 'filename' ],
-// 	]
-// ];
-// $message = [
-// 		// 'language' => [ 'en', '/optional/path/to/language/directory/' ],
-// 		'template' => [
-// 			'success' => '<div class="alert alert-success">{$message}</div>',
-// 			'error' => '<div class="alert alert-danger">{$message}</div>'
-// 		]
-// ];
-
-// const ROLE_USER = 0;
-// const ROLE_ADMIN = 1;
-// const ROLE_SUPERADMIN = 2;
-// $auth = [
-// 		'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
-// 		'allowed_fields' => [ 'username','email', 'password', 'confirm_password' ],
-
-// 		'logout_redirect' => '/auth/login/',
-// 		'member_area' => [
-// 			ROLE_USER => '/member/user/',
-// 			ROLE_ADMIN => '/member/admin/',
-// 			ROLE_SUPERADMIN => '/member/superadmin/'
-// 		],
-// 		'verify_email' => '',  // Specify page for email verification
-// 		'reset_password' => '' // Specify page for reset password
-// ];
-// $ezauth = new EzAuth(compact( 'database', 'email', 'message', 'auth' ));
-
-// dump( $ezauth );

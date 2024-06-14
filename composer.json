@@ -9,7 +9,8 @@
 		"phpmailer/phpmailer": "^6.9",
 		"twig/twig": "^3.10",
 		"symfony/validator": "^7.1",
-		"gabordemooij/redbean": "^5.7"
+		"gabordemooij/redbean": "^5.7",
+		"firebase/php-jwt": "^6.10"
 	},
 	"autoload": {
 		"psr-4": {
