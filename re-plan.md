@@ -71,14 +71,15 @@ $config = [
 	]
 ];
 $auth = new EzAuth( $config );
-$token = $auth->csrfToken();
+$csrfToken = $auth->csrfToken();
 $flash = $auth->flashMessage();
 
 list( $status, $flash, $csrfToken ) = $auth->register( $callback );
 list( $status, $flash ) = $auth->verifyEmail( $callback ) );
 list( $status, $flash, $csrfToken ) = $auth->login( $callback );
 list( $status, $flash, $csrfToken ) = $auth->recoverPassword( $callback );
-list( $status, $flash, $csrfToken ) = $auth->resetPassword( $callback ); 
+list( $status, $flash, $csrfToken ) = $auth->resetPassword( $callback );
+
 $user = $auth->memberArea( $allowedRoles );
 $user = $auth->isLoggedIn();
 // $auth->redirectLoggedInUser();
