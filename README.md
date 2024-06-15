@@ -5,6 +5,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 
 ## Reference
 
+>- __construct( array $config )
 >- register( $callback = null )
 >- verifyEmail( $callback = null )
 >- login( $callback = null )
