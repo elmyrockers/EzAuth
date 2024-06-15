@@ -59,17 +59,5 @@ $auth = [
 $ezauth = new EzAuth(compact( 'database', 'email', 'message', 'auth' ));
 
 
-
-
-
-// $_SERVER[ 'REQUEST_METHOD' ] = 'POST';
-// $_POST[ 'username' ] = 'elmyrockers';
-// $_POST[ 'email' ] = 'elmyrockers@gmail.com';
-// $_POST[ 'password' ] = '12345';
-// $_POST[ 'confirm_password' ] = '12345';
-// $ezauth->register();
-// $ezauth->verify_email( 'login.php' );
-// dump( $ezauth );
-
 // $secretKey = bin2hex( random_bytes( 32 ));
 // dump( $secretKey );
