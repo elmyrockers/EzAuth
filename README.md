@@ -81,9 +81,9 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	// register.php
 	<?php
 	require_once 'config.php'; // Include configuration file
-	$auth->register();
-	$flash = $auth->flashMessage();
-	$csrfToken = $auth->csrfToken();
+	list( ,$flash, $csrfToken ) = $auth->register();
+	// $flash = $auth->flashMessage();
+	// $csrfToken = $auth->csrfToken();
 
 	include 'register_form.php'; 
 	```
