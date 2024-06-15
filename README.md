@@ -93,13 +93,15 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 ## Reference
 
 >- __construct( array $config )
->- register( $callback = null )
->- verifyEmail( $callback = null )
->- login( $callback = null )
->- recoverPassword( $callback = null )
->- resetPassword( $callback = null )
->- memberArea( null\|string\|array $allowedRoles = null )
->- isLoggedIn()
+>- list( $status, $flash, $csrfToken ) = register( $callback = null )
+>- list( $status, $flash ) = verifyEmail( $callback = null )
+>- list( $status, $flash, $csrfToken ) = login( $callback = null )
+>- list( $status, $flash, $csrfToken ) = recoverPassword( $callback = null )
+>- list( $status, $flash, $csrfToken ) = resetPassword( $callback = null )
+
+>- $user = memberArea( null\|string\|array $allowedRoles = null )
+>- $user = isLoggedIn()
+
 >- logout()
 
 [Simple Tutorial](https://elmyrockers.github.io/EzAuth)
