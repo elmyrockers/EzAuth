@@ -26,9 +26,9 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```php
 	$auth = new EzAuth( $config );
 	```
-6. Save current file as `config.php`. The whole of code for `config.php` should look like this one:
+6. Save current file as `bootstrap.php`. The whole of code for `bootstrap.php` should look like this one:
 	```php
-	// config.php
+	// bootstrap.php
 	<?php
 	require_once 'vendor/autoload.php'; //Include composer's autoloader
 	use elmyrockers\EzAuth; // Use EzAuth package
@@ -80,7 +80,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```php
 	// register.php
 	<?php
-	require_once 'config.php'; // Include configuration file
+	require_once 'bootstrap.php'; // Include configuration file
 	list(,$flash, $csrfToken ) = $auth->register();
 
 	include 'register_form.php';
