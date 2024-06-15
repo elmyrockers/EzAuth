@@ -6,6 +6,13 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 ## Reference
 
 - register( $callback = null )
+- verifyEmail( $callback = null )
+- login( $callback = null )
+- recoverPassword( $callback = null )
+- resetPassword( $callback = null )
+- memberArea( null|string|array $allowedRoles = null )
+- isLoggedIn()
+- logout()
 
 [Simple Tutorial](https://elmyrockers.github.io/EzAuth)
 
