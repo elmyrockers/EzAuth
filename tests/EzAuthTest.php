@@ -61,13 +61,21 @@ class EzAuthTest extends TestCase
 	{
 		$auth = self::$auth;
 
-		dump( $_SERVER );
 		$auth->register();
 		// dump( $auth );
 		$this->assertTrue( true );
+		
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+	}
+
+	public function testVerifyEmail()
+	{
+		$auth = self::$auth;
+
+		$auth->verify_email();
+		// dump( $auth );
 		$this->assertTrue( true );
-		$this->assertTrue( true );
-		$this->assertTrue( true );
-		// $this->assertTrue( false );
+		
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
 	}
 }
