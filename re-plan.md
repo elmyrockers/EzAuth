@@ -5,7 +5,7 @@
 3. Twig 				- Template Engine (for email)
 4. EzFlash 				- Flash message display
 5. Symfony/Validator 	- Form validations
-
+6. Firebase/php-jwt 	- JWT Encode/Decode
 
 
 
