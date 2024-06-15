@@ -36,9 +36,10 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	$config = []; // Configuration
 	$auth = new EzAuth( $config );
 	```
-7. Create `register_form.php` file, and add this HTML form:
+7. Let create `register_form.php` file first, and add this HTML form:
 	```html
 	<!-- register_form.php -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><!-- We use `Bootstrap 5` as css styling in this form -->
 	<form method="post">
 		<?=$flash ?>
 		<?=$csrfToken ?>
@@ -75,7 +76,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 		</div>
 	</form>
 	```
-7. Create `register.php` file and add this code. Make sure you include `register_form.php` at the bottom:
+7. Then create `register.php` file and add this code. Make sure you include `register_form.php` at the bottom:
 	```php
 	// register.php
 	<?php
