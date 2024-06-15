@@ -99,7 +99,7 @@ You can now access `register.php` in your web browser to see the registration fo
 
 
 ## Reference
-
+>#### Methods:
 >- __construct( array $config )
 >- $csrfToken = csrfToken()
 >- $flash = flashMessage()
