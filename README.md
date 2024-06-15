@@ -22,7 +22,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```php
 	$config = [];
 	```
-5. Create new EzAuth instance. Put the configuration as its parameter:
+5. Create new EzAuth object instance. Put the configuration `$config` as its parameter:
 	```php
 	$auth = new EzAuth( $config );
 	```
@@ -36,32 +36,68 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	$config = []; // Configuration
 	$auth = new EzAuth( $config );
 	```
+7. Create `register_form.php` file, and put this HTML code:
+	```html
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="utf-8">
+			<title>EzAuth: Register</title>
+			<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+		</head>
+		<body>
+			<div class="container">
+				<div class="row">
+					<div class="offset-2 col-8 mt-5">
+						<div class="alert alert-danger">There is an error occurred!</div>
+						<?=$flash ?>
+						<h1 class="my-3">Register Form</h1>
+						<form method="post">
+							<?=$csrfToken ?>
+							<div class="mb-3 row">
+								<label for="username" class="col-sm-3 col-form-label">Username:</label>
+								<div class="col-sm-9">
+									<input type="text" name="username" id="username" class="form-control" value="">
+								</div>
+							</div>
+							<div class="mb-3 row">
+								<label for="email" class="col-sm-3 col-form-label">Email:</label>
+								<div class="col-sm-9">
+									<input type="email" name="email" id="email" class="form-control" value="">
+								</div>
+							</div>
+							<div class="mb-3 row">
+								<label for="password" class="col-sm-3 col-form-label">Password:</label>
+								<div class="col-sm-9">
+									<input type="password" name="password" id="password" class="form-control">
+								</div>
+							</div>
+							<div class="mb-3 row">
+								<label for="confirm-password" class="col-sm-3 col-form-label">Confirm Password:</label>
+								<div class="col-sm-9">
+									<input type="password" name="confirm_password" id="confirm-password" class="form-control">
+								</div>
+							</div>
+							<div class="mt-3 mb-3 row">
+								<div class="col">
+									<button type="submit" class="btn btn-primary float-end">Register</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+	```
 7. Create `register.php` file and put this code:
 	```php
 	// register.php
 	<?php
 	require_once 'config.php'; // Include configuration file
 	$auth->register();
-	//--------------------------------------?>
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<meta charset="utf-8">
-		<title>EzAuth: Register</title>
-		<!-- <link rel="stylesheet" type="text/css" href="bootstrap5"> -->
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-	</head>
-	<body>
-		<div class="container">
-			
-		</div>
-	</body>
-	</html>	
 	```
-	```html
 
-
-	```
 
 5. Then you can call any EzAuth method:
 	```php
