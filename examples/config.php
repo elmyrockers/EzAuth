@@ -57,6 +57,6 @@ $auth = [
 ];
 $ezauth = new EzAuth(compact( 'database', 'email', 'message', 'auth' ));
 
-
-// $secretKey = bin2hex( random_bytes( 32 ));
+// Generate 256-bit Secret Key using these functions
+// $secretKey = bin2hex( random_bytes( 32 )); // Cryptographically secure
 // dump( $secretKey );
