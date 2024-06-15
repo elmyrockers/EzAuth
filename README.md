@@ -22,12 +22,25 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```php
 	$config = [];
 	```
-
-
 5. Create new EzAuth instance. Put the configuration as its parameter:
 	```php
 	$auth = new EzAuth( $config );
 	```
+6. Save current file as `config.php`. The whole of code for `config.php` should look like this one:
+	```php
+	// config.php
+	<?php
+	require_once 'vendor/autoload.php'; //Include composer's autoloader
+	use elmyrockers\EzAuth; // Use EzAuth package
+
+	$config = []; // Configuration
+	$auth = new EzAuth( $config );
+	```
+
+
+
+
+
 5. Then you can call any EzAuth method:
 	```php
 	$auth->register();
