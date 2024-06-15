@@ -38,6 +38,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```
 7. Create `register_form.php` file, and add this HTML form:
 	```html
+	<!-- register_form.php -->
 	<form method="post">
 		<?=$flash ?>
 		<?=$csrfToken ?>
