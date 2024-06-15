@@ -8,6 +8,7 @@ use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception as Mail_Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+
 /**
  * 
  */
@@ -57,6 +58,18 @@ class EzAuth
 				$mailer->addReplyTo( $reply_to[0], $replyToName );
 			}
 			$this->mailer = $mailer;
+		
+		// Setup default email templates
+			$defaultEmailConfig = [
+				'template_dir' => '',
+				'templates' => [
+					'email_verification' => [ 'Your Verification Link', 'email_verification' ],
+					'reset_password' => [ 'Reset Password Request', 'reset_password' ]
+				]
+			];
+			$this->config[ 'email' ][ 'template_dir' ] = $email['template_dir'] ?? $defaultEmailConfig['template_dir'];
+			$this->config[ 'email' ][ 'templates' ] = array_merge( $defaultEmailConfig['templates'], $email['templates'] );
+
 
 		// Setup flash message
 			$flash = new EzFlash;
@@ -96,9 +109,47 @@ class EzAuth
 		if ( $errorInfo ) return false;
 	}
 
-	private function _sendMail($value='')
+	private function _sendMail( $to, $emailType, $vars, &$errorInfo ) // For register & forgot_password
 	{
-		// code...
+		# Email Configuration
+			$template_dir = $this->config[ 'email' ][ 'template_dir' ];
+			$template = $this->config[ 'email' ][ 'templates' ][ $emailType ];
+
+		# Get email body
+			$loader = new \Twig\Loader\FilesystemLoader( $template_dir );
+			$twig = new \Twig\Environment($loader);
+			$html = $twig->render( "{$template[1]}.html.twig", $vars );
+			$plain = $twig->render( "{$template[1]}.txt.twig", $vars );
+
+		# Send email
+			$mailer = $this->mailer;
+			try {
+				//Recipient
+					if ( count($to)>1 ) {
+						$mailer->addAddress( $to[0], $to[1] );
+					} elseif ( !empty($to[0]) ) {
+						$mailer->addAddress( $to[0] );
+					} elseif ( is_string($to) ) {
+						$mailer->addAddress( $to );
+					}
+					
+				//Content
+					$mailer->isHTML( true ); //Set email format to HTML
+					$mailer->Subject = $template[0];
+					$mailer->Body    = $html;
+					$mailer->AltBody = $plain;
+
+					return $mailer->send();
+			} catch (Exception $e) {
+				$errorInfo = $mailer->ErrorInfo;
+				return false;
+			}
+		return true;
+	}
+
+	public function flashMessage()
+	{
+		return $this->flash;
 	}
 
 	public function register( $callback = null )
@@ -131,9 +182,8 @@ class EzAuth
 			$now = R::isoDateTime();
 			$user[ 'created' ] = $now;
 			$user[ 'modified' ] = $now;
-			// dd( $user );
-			// $userID  = R::store( $user );
-			// if ( !$userID ) return $this->_callback( $callback, null, 'Failed to register the user. Please try again.' );
+			$userID  = R::store( $user );
+			if ( !$userID ) return $this->_callback( $callback, null, 'Failed to register the user. Please try again.' );
 			
 			// dd( $user );
 
@@ -141,30 +191,116 @@ class EzAuth
 			if ( $verify_email ) {
 				// Make sure there is secret key
 					$secretKey = $this->config['auth']['secret_key'];
-					if ( !$secretKey ) throw new Exception( 'Missing secret key' );
+					if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
 					
-				$domain = $this->config[ 'auth' ][ 'domain' ];
-				$now = time();
-				$payload = [
-					'iss' => $domain,
-					'aud' => $domain,
-					'iat' => $now,
-					'exp' => $now + 3600, // Valid for 1 hour
-					'email' => $user[ 'email' ],
-					'code' => $code
-				];
-				$token = JWT::encode( $payload, $secretKey, 'HS256' );
-				$verificationLink = "{$domain}/{$verify_email}?token={$token}";
-				// dd( $verificationLink );
-				$result = $this->_sendMail( [ $email, $username ], 'email_verification', compact('verificationLink','user'), $mailErrorInfo );
-				// if ( !$result ) {
-				// 	$user->delete();
-				// 	$this->_redirectCallback( $redirectTo, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
-				// } else {
-				// 	$this->flash[ 'success' ] = 'A verification link has been sent to your email.';
-				// 	$this->_redirectCallback( $redirectTo, $user );
-				// 	return;
-				// }
+				// Generate token and verification link
+					$domain = $this->config[ 'auth' ][ 'domain' ];
+					$now = time();
+					$payload = [
+						'iss' => $domain,
+						'aud' => $domain,
+						'iat' => $now,
+						'exp' => $now + 3600, // Valid for 1 hour
+						'email' => $user[ 'email' ],
+						'code' => $code
+					];
+					$token = JWT::encode( $payload, $secretKey, 'HS256' );
+					$verificationLink = "{$domain}/{$verify_email}?token={$token}";
+
+				// Send email
+					$to = [ $user['email'],
+							$user['username'] ];
+					$vars = compact('verificationLink','user');
+					$result = $this->_sendMail( $to, 'email_verification', $vars, $mailErrorInfo );
+					// dd( $result );
+
+				if ( !$result ) {
+					// $user->delete();
+					$this->_callback( $callback, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
+				} else {
+					$this->flash[ 'success' ] = 'A verification link has been sent to your email.';
+					$this->_callback( $callback, $user );
+					return;
+				}
 			}
+
+		# Redirect user to other page & display success message
+			$this->flash[ 'success' ] = 'You have been registered successfully' ;
+			$this->_callback( $callback, $user );
+	}
+
+	public function verify_email( $callback = null )
+	{
+		# Validate token
+			$token = $_GET[ 'token' ] ?? null;
+			if ( !$token ) throw new \Exception( "Token does not exist" );
+
+			// Make sure there is secret key
+				$secretKey = $this->config['auth']['secret_key'];
+				if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
+
+
+			$payload = JWT::decode( $token, new Key($secretKey,'HS256') );
+
+			dd( $payload );
+			return;
+
+		# Make sure url query - email and code does exist
+			if ( empty($_GET['email']) || empty($_GET['code']) ) {
+				$this->_redirectCallback( $redirectTo, null, 'Invalid verification link' ); return;
+			}
+			$email = $_GET[ 'email' ];
+			$code = $_GET[ 'code' ];
+
+		# Make sure the email format is valid
+			$email = filter_var( $email, FILTER_VALIDATE_EMAIL );
+			if ( !$email ) {
+				$this->_redirectCallback( $redirectTo, null, 'Invalid email in verification link' ); return;
+			}
+			// if (!checkdnsrr($domain, 'MX')) {
+			// 	// domain is not valid
+			// }
+
+		# Make sure the email exists in our database
+			$user = $this->db->user[[ 'email'=>$email ]];
+			if ( !$user ) {
+				$this->_redirectCallback( $redirectTo, null, 'The email does not exist in our database' ); return;
+			}
+			// var_dump($user);
+		
+		# Make sure created time does not exceed 23 hours 59 minutes
+			$registeredTime = new \DateTime( $user['created'] );
+			$now = new \DateTime();
+			$diff = $registeredTime->diff( $now );
+			$days = $diff->d;
+			$hours = $diff->h;
+			$totalOfHours = ($days*24) + $hours;
+			if ( $totalOfHours >= 24 ) {
+				$this->_redirectCallback( $redirectTo, $user, 'Your verification link has expired' ); return;
+			}
+
+		# Make sure the code is valid
+			if ( $code != $user['code'] ) {
+				$this->_redirectCallback( $redirectTo, $user, 'Invalid code in verification link' ); return;
+			}
+
+		# Make sure the email did not yet verified
+			// var_dump( $user['verified'] );
+			if ( $user['verified'] ) {
+				$this->flash[ 'success' ] = 'Your email has been verified';
+				$this->_redirectCallback( $redirectTo, $user );
+				return;
+			}
+
+		# Verification link is valid. Then, set 'verified' column to 1
+		# Redirect user to other page and display result message
+			$result = $user->update([ 'verified'=>1 ]);
+			if ( !$result ) {
+				$this->_redirectCallback( $redirectTo, $result, 'Failed to update verification data' ); return;
+			}
+
+		# Redirect user or execute callback
+			$this->flash[ 'success' ] = 'Your email has been verified successfully';
+			$this->_redirectCallback( $redirectTo, $user );
 	}
 }
