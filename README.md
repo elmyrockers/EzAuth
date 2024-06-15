@@ -9,7 +9,29 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```sh
 	composer require elmyrockers/ezauth
 	```
-2. 
+2. Include composer autoloader:
+	```php
+	<?php
+	require_once 'vendor/autoload.php';
+	```
+3. Include this code to use EzAuth package:
+	```php
+	use elmyrockers\EzAuth;
+	```
+4. Create an array contain configuration for our authentication:
+	```php
+	$config = [];
+	```
+
+
+5. Create new EzAuth instance. Put the configuration as its parameter:
+	```php
+	$auth = new EzAuth( $config );
+	```
+5. Then you can call any EzAuth method:
+	```php
+	$auth->register();
+	```
 
 ## Reference
 
