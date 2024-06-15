@@ -85,8 +85,8 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 
 	include 'register_form.php'; 
 	```
-	Then, you can try to submit this register form, then view its result on your localhost.
-	
+	Then, you can try to submit this register form, then view its result on your localhost. Good luck!
+
 
 ## Reference
 
