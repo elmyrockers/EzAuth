@@ -1,5 +1,13 @@
 {
 	"name": "elmyrockers/ezauth",
+	"authors": [
+		{
+			"name": "Helmi Aziz",
+			"email": "helmi@xeno.com.my",
+			"homepage": "https://elmyrockers.github.io",
+			"role": "Software Developer"
+		}
+	],
 	"description": "EzAuth PHP library - Lightweight & easy authentication library with secure 'remember me' feature for PHP. With this, you just need to write a few lines of PHP code only in each pages.",
 	"type": "library",
 	"version": "1.0.0",
