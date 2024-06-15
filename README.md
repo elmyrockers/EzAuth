@@ -37,58 +37,42 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	$auth = new EzAuth( $config );
 	```
 7. Create `register_form.php` file, and put this HTML code:
-	```html
-	<!DOCTYPE html>
-	<html>
-		<head>
-			<meta charset="utf-8">
-			<title>EzAuth: Register</title>
-			<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-		</head>
-		<body>
-			<div class="container">
-				<div class="row">
-					<div class="offset-2 col-8 mt-5">
-						<div class="alert alert-danger">There is an error occurred!</div>
-						<?=$flash ?>
-						<h1 class="my-3">Register Form</h1>
-						<form method="post">
-							<?=$csrfToken ?>
-							<div class="mb-3 row">
-								<label for="username" class="col-sm-3 col-form-label">Username:</label>
-								<div class="col-sm-9">
-									<input type="text" name="username" id="username" class="form-control" value="">
-								</div>
-							</div>
-							<div class="mb-3 row">
-								<label for="email" class="col-sm-3 col-form-label">Email:</label>
-								<div class="col-sm-9">
-									<input type="email" name="email" id="email" class="form-control" value="">
-								</div>
-							</div>
-							<div class="mb-3 row">
-								<label for="password" class="col-sm-3 col-form-label">Password:</label>
-								<div class="col-sm-9">
-									<input type="password" name="password" id="password" class="form-control">
-								</div>
-							</div>
-							<div class="mb-3 row">
-								<label for="confirm-password" class="col-sm-3 col-form-label">Confirm Password:</label>
-								<div class="col-sm-9">
-									<input type="password" name="confirm_password" id="confirm-password" class="form-control">
-								</div>
-							</div>
-							<div class="mt-3 mb-3 row">
-								<div class="col">
-									<button type="submit" class="btn btn-primary float-end">Register</button>
-								</div>
-							</div>
-						</form>
-					</div>
-				</div>
+	```php
+	<form method="post">
+		<?=$flash ?><!-- <div class="alert alert-danger">There is an error occurred!</div> -->
+		<?=$csrfToken ?>
+		
+		<h1 class="my-3">Register Form</h1>
+		<div class="mb-3 row">
+			<label for="username" class="col-sm-3 col-form-label">Username:</label>
+			<div class="col-sm-9">
+				<input type="text" id="username" class="form-control" value="">
 			</div>
-		</body>
-	</html>
+		</div>
+		<div class="mb-3 row">
+			<label for="email" class="col-sm-3 col-form-label">Email:</label>
+			<div class="col-sm-9">
+				<input type="email" id="email" class="form-control" value="">
+			</div>
+		</div>
+		<div class="mb-3 row">
+			<label for="password" class="col-sm-3 col-form-label">Password:</label>
+			<div class="col-sm-9">
+				<input type="password" id="password" class="form-control">
+			</div>
+		</div>
+		<div class="mb-3 row">
+			<label for="confirm-password" class="col-sm-3 col-form-label">Confirm Password:</label>
+			<div class="col-sm-9">
+				<input type="password" id="confirm-password" class="form-control">
+			</div>
+		</div>
+		<div class="mt-3 mb-3 row">
+			<div class="col">
+				<button type="submit" class="btn btn-primary float-end">Register</button>
+			</div>
+		</div>
+	</form>
 	```
 7. Create `register.php` file and put this code:
 	```php
