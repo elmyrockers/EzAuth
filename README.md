@@ -5,28 +5,35 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 
 ## Usage/Examples
 
-1. Install via composer:
+1. Installation:
+	Install the EzAuth package using Composer:
 	```sh
 	composer require elmyrockers/ezauth
 	```
-2. Include composer's autoloader:
+2.  Include Composer's Autoloader:
+	Include Composer's autoloader script in your project:
 	```php
 	<?php
 	require_once 'vendor/autoload.php';
 	```
-3. Include this code to use EzAuth package:
+3. Using EzAuth Package:
+	Import the `EzAuth` class from the `elmyrockers\EzAuth` namespace:
 	```php
 	use elmyrockers\EzAuth;
 	```
-4. Create an array contain configuration for our authentication:
+4. Configuration:
+	Create an array contain configuration for our authentication:
 	```php
 	$config = [];
 	```
-5. Create new EzAuth object instance. Put the configuration `$config` as its parameter:
+5. EzAuth Object:
+	Instantiate a new `EzAuth` object, passing the configuration array as an argument.
+	<!-- Create new EzAuth object instance. Put the configuration `$config` as its parameter: -->
 	```php
 	$auth = new EzAuth( $config );
 	```
-6. Save current file as `bootstrap.php`. The whole of code for `bootstrap.php` should look like this one:
+6. bootstrap.php:
+	Save the code as `bootstrap.php`. The complete code for this file should look like this:
 	```php
 	// bootstrap.php
 	<?php
@@ -36,10 +43,11 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	$config = []; // Configuration
 	$auth = new EzAuth( $config );
 	```
-7. Let create `register_form.php` file first, and add this HTML form:
+7. Register Form:
+	Create a file named `register_form.php` containing the following HTML form. This form includes Bootstrap 5 for styling (you can replace it with your preferred framework).
 	```html
 	<!-- register_form.php -->
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><!-- We use `Bootstrap 5` as css styling in this form -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 	<form method="post">
 		<?=$flash ?>
 		<?=$csrfToken ?>
@@ -76,16 +84,18 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 		</div>
 	</form>
 	```
-7. Then create `register.php` file and add this code. Make sure you include `register_form.php` at the bottom:
+8. register.php:
+	Create a file named `register.php` with the following code. It includes `bootstrap.php` and retrieves flash messages and the CSRF token from the `EzAuth` object before displaying the registration form.
 	```php
 	// register.php
 	<?php
 	require_once 'bootstrap.php'; // Include bootstrap file
-	list(,$flash, $csrfToken ) = $auth->register();
+
+	list(,$flash, $csrfToken ) = $auth->register();  // Extract flash message and CSRF token
 
 	include 'register_form.php';
 	```
-	Then, you can try to submit this register form, and view its result on your localhost. Good luck!
+	You can now access `register.php` in your web browser to see the registration form and submit registration data. Good luck!
 
 
 ## Reference
