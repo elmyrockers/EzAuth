@@ -93,6 +93,8 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 ## Reference
 
 >- __construct( array $config )
+>- $csrfToken = csrfToken()
+>- $flash = flashMessage()
 >- list( $status, $flash, $csrfToken ) = register( $callback = null )
 >- list( $status, $flash ) = verifyEmail( $callback = null )
 >- list( $status, $flash, $csrfToken ) = login( $callback = null )
