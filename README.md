@@ -5,34 +5,34 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 
 ## Usage/Examples
 
-1. Installation:
+### 1. Installation:
 	Install the EzAuth package using Composer:
 	```sh
 	composer require elmyrockers/ezauth
 	```
-2.  Include Composer's Autoloader:
+### 2.  Include Composer's Autoloader:
 	Include Composer's autoloader script in your project:
 	```php
 	<?php
 	require_once 'vendor/autoload.php';
 	```
-3. Using EzAuth Package:
+### 3. Using EzAuth Package:
 	Import the `EzAuth` class from the `elmyrockers\EzAuth` namespace:
 	```php
 	use elmyrockers\EzAuth;
 	```
-4. Configuration:
+### 4. Configuration:
 	Create an array contain configuration for our authentication:
 	```php
 	$config = [];
 	```
-5. EzAuth Object:
+### 5. EzAuth Object:
 	Instantiate a new `EzAuth` object, passing the configuration array as an argument.
 	<!-- Create new EzAuth object instance. Put the configuration `$config` as its parameter: -->
 	```php
 	$auth = new EzAuth( $config );
 	```
-6. bootstrap.php:
+### 6. bootstrap.php:
 	Save the code as `bootstrap.php`. The complete code for this file should look like this:
 	```php
 	// bootstrap.php
@@ -43,7 +43,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	$config = []; // Configuration
 	$auth = new EzAuth( $config );
 	```
-7. Register Form:
+### 7. Register Form:
 	Create a file named `register_form.php` containing the following HTML form. This form includes Bootstrap 5 for styling (you can replace it with your preferred framework).
 	```html
 	<!-- register_form.php -->
@@ -84,7 +84,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 		</div>
 	</form>
 	```
-8. register.php:
+### 8. register.php:
 	Create a file named `register.php` with the following code. It includes `bootstrap.php` and retrieves flash messages and the CSRF token from the `EzAuth` object before displaying the registration form.
 	```php
 	// register.php
