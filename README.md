@@ -85,17 +85,18 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	</form>
 	```
 ### 8. register.php:
-	Create a file named `register.php` with the following code. It includes `bootstrap.php` and retrieves flash messages and the CSRF token from the `EzAuth` object before displaying the registration form.
-	```php
-	// register.php
-	<?php
-	require_once 'bootstrap.php'; // Include bootstrap file
+Create a file named `register.php` with the following code. It includes `bootstrap.php` and retrieves flash messages and the CSRF token from the `EzAuth` object before displaying the registration form.
+```php
+// register.php
+<?php
+require_once 'bootstrap.php'; // Include bootstrap file
 
-	list(,$flash, $csrfToken ) = $auth->register();  // Extract flash message and CSRF token
+list(,$flash, $csrfToken ) = $auth->register();  // Extract flash message and CSRF token
 
-	include 'register_form.php';
-	```
-	You can now access `register.php` in your web browser to see the registration form and submit registration data. Good luck!
+include 'register_form.php';
+```
+	
+You can now access `register.php` in your web browser to see the registration form and submit registration data. Good luck!
 
 
 ## Reference
