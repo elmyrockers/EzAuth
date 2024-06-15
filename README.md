@@ -81,11 +81,9 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	// register.php
 	<?php
 	require_once 'config.php'; // Include configuration file
-	list( ,$flash, $csrfToken ) = $auth->register();
-	// $flash = $auth->flashMessage();
-	// $csrfToken = $auth->csrfToken();
+	list(,$flash, $csrfToken ) = $auth->register();
 
-	include 'register_form.php'; 
+	include 'register_form.php';
 	```
 	Then, you can try to submit this register form, and view its result on your localhost. Good luck!
 
