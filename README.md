@@ -80,7 +80,7 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	```php
 	// register.php
 	<?php
-	require_once 'bootstrap.php'; // Include configuration file
+	require_once 'bootstrap.php'; // Include bootstrap file
 	list(,$flash, $csrfToken ) = $auth->register();
 
 	include 'register_form.php';
