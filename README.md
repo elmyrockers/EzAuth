@@ -36,10 +36,10 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 	$config = []; // Configuration
 	$auth = new EzAuth( $config );
 	```
-7. Create `register_form.php` file, and put this HTML code:
-	```php
+7. Create `register_form.php` file, and add this HTML form:
+	```html
 	<form method="post">
-		<?=$flash ?><!-- <div class="alert alert-danger">There is an error occurred!</div> -->
+		<?=$flash ?>
 		<?=$csrfToken ?>
 		
 		<h1 class="my-3">Register Form</h1>
@@ -74,19 +74,19 @@ Lightweight & easy authentication library with secure 'remember me' feature for 
 		</div>
 	</form>
 	```
-7. Create `register.php` file and put this code:
+7. Create `register.php` file and add this code. Make sure you include `register_form.php` at the bottom:
 	```php
 	// register.php
 	<?php
 	require_once 'config.php'; // Include configuration file
 	$auth->register();
-	```
+	$flash = $auth->flashMessage();
+	$csrfToken = $auth->csrfToken();
 
-
-5. Then you can call any EzAuth method:
-	```php
-	$auth->register();
+	include 'register_form.php'; 
 	```
+	Then, you can try to submit this register form, then view its result on your localhost.
+	
 
 ## Reference
 
