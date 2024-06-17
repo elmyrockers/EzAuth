@@ -105,6 +105,7 @@ You can now access `register.php` in your web browser to see the registration fo
 >- Email
 >- Message
 >- Auth
+
 >#### Methods:
 >- __construct( array $config )
 >- $csrfToken = csrfToken()
