@@ -36,7 +36,8 @@ Debug::enable();
 			'reset_password' => '', // Specify page for reset password
 			'secret_key' => '427a656ece850f275ae8fc5cc50b6d6a25b2b8b3b09925d6fab93cf062d015c8'
 	];
-	$ezauth = new EzAuth(compact( 'database', 'email', 'message', 'auth' ));
+	// $ezauth = new EzAuth(compact( 'database', 'email', 'message', 'auth' ));
+	$ezauth = new EzAuth(compact( 'database', 'email', 'auth' ));
 
 // Generate 256-bit Secret Key using these functions
 // $secretKey = bin2hex( random_bytes( 32 )); // Cryptographically secure

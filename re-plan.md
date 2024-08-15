@@ -58,6 +58,7 @@ $config = [
 	'auth' => [
 		'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
 		'allowed_fields' => [ 'username','email', 'password', 'confirm_password' ],
+		'unique_fields' => [ 'username','email' ],
 
 		'domain' => '', // https://yoursite.com
 		'logout_redirect' => '/login.php',

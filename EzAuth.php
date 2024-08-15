@@ -60,6 +60,7 @@ class EzAuth
 			$this->mailer = $mailer;
 		
 		// Setup default email templates
+			$email[ 'templates' ] = $email['templates'] ?? [];
 			$defaultEmailConfig = [
 				'template_dir' => '',
 				'templates' => [
@@ -162,6 +163,7 @@ class EzAuth
 
 		# Make sure the account does not yet exists
 			$user = R::findOne( 'user', 'username=? OR email=?', [$_POST['username'],$_POST['email']] );
+			dd( $user );
 			if ( $user ) return $this->_callback( $callback, $user, 'E-mail or username already exists in our system' );
 
 		# If user's email has to be validated, generate secret code
