@@ -1,11 +1,11 @@
 
 ### REQUIRE:
-1. RedbeanPHP 			- Database
-2. PHPMailer 			- Mailer
-3. Twig 				- Template Engine (for email)
-4. EzFlash 				- Flash message display
-5. Symfony/Validator 	- Form validations
-6. Firebase/php-jwt 	- JWT Encode/Decode
+1. RedbeanPHP 				- Database
+2. PHPMailer 				- Mailer
+3. Twig 					- Template Engine (for email)
+4. EzFlash 					- Flash message display
+5. Illuminate/validation 	- Form validations
+6. Firebase/php-jwt 		- JWT Encode/Decode
 
 
 
@@ -56,10 +56,15 @@ $config = [
 
 	// Authentication
 	'auth' => [
-		'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
-		'allowed_fields' => [ 'username','email', 'password', 'confirm_password' ],
-		'unique_fields' => [ 'username','email' ],
-
+		'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
+		'signup_fields' => [
+			'username' => 'required|string|min:3|max:20|alpha_dash|unique:users,username',
+			'email' => 'required|string|email|max:255|unique:users,email',
+			'password' => [ 'required', 'string', 'min:8', 'confirmed:confirm_password', // Reference to confirm_password
+				'regex:/[!@#$%^&*(),.?":{}|<>]/' // Ensure at least one special character
+			],
+			'confirm_password' => 'required_with:password',
+		],
 		'domain' => '', // https://yoursite.com
 		'logout_redirect' => '/login.php',
 		'member_area' => [

@@ -16,9 +16,11 @@
 		"elmyrockers/ezflash": "^1.0",
 		"phpmailer/phpmailer": "^6.9",
 		"twig/twig": "^3.10",
-		"symfony/validator": "^7.1",
 		"gabordemooij/redbean": "^5.7",
-		"firebase/php-jwt": "^6.10"
+		"firebase/php-jwt": "^6.10",
+		"illuminate/validation": "^11.20",
+		"illuminate/translation": "^11.20",
+		"illuminate/support": "^11.20"
 	},
 	"autoload": {
 		"psr-4": {

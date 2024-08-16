@@ -9,6 +9,10 @@ use PHPMailer\PHPMailer\Exception as Mail_Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+use Illuminate\Validation\Factory as ValidatorFactory;
+use Illuminate\Translation\ArrayLoader;
+use Illuminate\Translation\Translator;
+
 /**
  * 
  */

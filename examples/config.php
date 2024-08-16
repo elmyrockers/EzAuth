@@ -24,7 +24,7 @@ Debug::enable();
 	const ROLE_SUPERADMIN = 2;
 	$auth = [
 			'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
-			'allowed_fields' => [ 'username','email', 'password', 'confirm_password' ],
+			'signup_fields' => [ 'username','email', 'password', 'confirm_password' ],
 
 			'logout_redirect' => '/auth/login/',
 			'member_area' => [
