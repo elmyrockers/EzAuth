@@ -89,8 +89,8 @@ class EzAuth
 			$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 			$current_domain = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
 			$defaultAuthConfig = [
-					'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
-					'allowed_fields' => [ 'username','email', 'password', 'confirm_password' ],
+					'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
+					'signup_fields' => [ 'username','email', 'password', 'confirm_password' ],
 
 					'domain' => $current_domain, // Current domain is default
 					'logout_redirect' => '/login.php',
@@ -162,13 +162,13 @@ class EzAuth
 		# Make sure register form has been sent first
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
 
-		# Start form input validations. With symfony/validator
+		# Start form input validations. With 'illuminate/validation'
 			unset( $_POST['confirm_password'] );
 
 		# Make sure the account does not yet exists
-			$user = R::findOne( 'user', 'username=? OR email=?', [$_POST['username'],$_POST['email']] );
-			dd( $user );
-			if ( $user ) return $this->_callback( $callback, $user, 'E-mail or username already exists in our system' );
+			// $user = R::findOne( 'user', 'username=? OR email=?', [$_POST['username'],$_POST['email']] );
+			// dd( $user );
+			// if ( $user ) return $this->_callback( $callback, $user, 'E-mail or username already exists in our system' );
 
 		# If user's email has to be validated, generate secret code
 			$code = null; $email_verified = 1;
