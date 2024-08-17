@@ -16,7 +16,7 @@ Debug::enable();
 	$email = [
 		'from' => [ 'no-reply@yoursite.com', 'EzAuth' ],
 		'reply_to' => [ 'admin@yoursite.com', 'Admin' ],
-		'template_dir' => 'views/emails/'
+		'template_dir' => __DIR__.'/../views/emails/'
 	];
 
 	const ROLE_USER = 0;
@@ -25,11 +25,9 @@ Debug::enable();
 	$auth = [
 			'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
 			'signup_fields' => [
-				// 'username' => [ 'required|string|min:3|max:20|alpha_dash|unique:users,username', FILTER_SANITIZE_FULL_SPECIAL_CHARS ],
 				'email' => [ 'required|string|email|max:255|unique:user,email', FILTER_SANITIZE_EMAIL ],
-				'password' => [['required','string','min:8','confirmed:confirm_password','regex:/[!@#$%^&*(),.?":{}|<>]/']],
-				'confirm_password' => [ 'required_with:password' ],
-				'test' => []
+				'password' => [['required','string','min:8','regex:/[!@#$%^&*(),.?":{}|<>]/']],
+				'confirm_password' => [ 'required|same:password' ]
 			],
 
 			'logout_redirect' => '/auth/login/',

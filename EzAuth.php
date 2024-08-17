@@ -11,9 +11,11 @@ use Firebase\JWT\Key;
 
 use Illuminate\Validation\Factory as ValidatorFactory;
 use Illuminate\Validation\PresenceVerifierInterface;
-use Illuminate\Translation\ArrayLoader;
-use Illuminate\Translation\Translator;
 
+use Illuminate\Translation\Translator;
+// use Illuminate\Translation\ArrayLoader;
+use Illuminate\Translation\FileLoader;
+use Illuminate\Filesystem\Filesystem;
 
 
 /**
@@ -38,6 +40,8 @@ class EzAuth
 				throw new \Exception( "Missing Database Config" );
 			}
 			R::setup( $database['dsn'], $database['username'], $database['password'] );
+			$this->config[ 'database' ][ 'user_table' ] = $database[ 'user_table' ] ?? 'user';
+			$this->config[ 'database' ][ 'remember_table' ] = $database[ 'remember_table' ] ?? 'remember';
 
 		// Setup email settings
 			$mailer = new PHPMailer(true);
@@ -96,9 +100,9 @@ class EzAuth
 			$defaultAuthConfig = [
 					'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
 					'signup_fields' => [
-						'email' => [ 'required|string|email|max:255|unique:users,email', FILTER_SANITIZE_EMAIL ],
-						'password' => [['required','string','min:8','confirmed:confirm_password','regex:/[!@#$%^&*(),.?":{}|<>]/']],
-						'confirm_password' => [ 'required_with:password' ],
+						'email' => [ 'required|string|email|max:255|unique:user,email', FILTER_SANITIZE_EMAIL ],
+						'password' => [['required','string','min:8','regex:/[!@#$%^&*(),.?":{}|<>]/']],
+						'confirm_password' => [ 'required|same:password' ],
 					],
 					'domain' => $current_domain, // Current domain is default
 					'logout_redirect' => '/login.php',
@@ -115,7 +119,8 @@ class EzAuth
 			// dump( $auth );
 
 		// Set up translation and validation factory
-			$loader = new ArrayLoader();
+			// $loader = new ArrayLoader();
+			$loader = new FileLoader(new Filesystem(), __DIR__ . '/lang');
 			$translator = new Translator( $loader, 'en' );
 			$this->validatorFactory = new ValidatorFactory( $translator );
 
@@ -133,6 +138,8 @@ class EzAuth
 
 	private function _callback( $callback, $user, $errorInfo = null )
 	{
+		echo $errorInfo;
+		exit;
 		if ( $errorInfo ) return false;
 	}
 
@@ -192,9 +199,8 @@ class EzAuth
 				$filters = [];
 				$validationRules = [];
 				foreach ( $signupFields as $fieldName => $info ) {
-					if ( !is_array($info) ) {
-						throw new \Exception( "Error: Configuration value for 'auth.signup_fields.$fieldName' field must be of type array." );
-					}
+					if ( !is_array($info) ) throw new \Exception( "Error: Configuration value for 'auth.signup_fields.$fieldName' field must be of type array." );
+					
 					$inputs[ $fieldName ] = $_POST[ $fieldName ] ?? null;
 					$validationRules[ $fieldName ] = array_shift( $info ) ?? [];
 					if ( $info ) $filters[ $fieldName ] = $info;
@@ -212,32 +218,22 @@ class EzAuth
 			// Validation
 				$validator = $this->validatorFactory->make( $inputs, $validationRules );
 				if ( $validator->fails() ) {
-					$errors = $validator->errors();
-					dd( $errors->all() );
-					// foreach ($errors->all() as $message) {
-					// 	echo $message . "<br>";
-					// }
-				} else {
-					echo "All data is valid!";
+					$errors = $validator->errors()->all();
+					$errors = join( '<br>', $errors );
+					return $this->_callback( $callback, null, $errors );
 				}
-				// dd( $validator );
-			// unset( $_POST['confirm_password'] );
+				unset( $inputs['confirm_password'] );
 
-		# Make sure the account does not yet exists
-			// $user = R::findOne( 'user', 'username=? OR email=?', [$_POST['username'],$_POST['email']] );
-			// dd( $user );
-			// if ( $user ) return $this->_callback( $callback, $user, 'E-mail or username already exists in our system' );
-
-		# If user's email has to be validated, generate secret code
+		# If user's email has to be validated, generate confirmation code
 			$code = null; $email_verified = 1;
-			$verify_email = $this->config[ 'auth' ][ 'verify_email' ] ?? null ;
+			$verify_email = $this->config[ 'auth' ][ 'verify_email' ] ?? null;
 			if ( $verify_email ) {
 				$code = bin2hex(random_bytes(16));
 				$email_verified = 0;
 			}
 
 		# Save user data into 'user' table in database
-			$user = R::dispense( 'user' )->import( $_POST );
+			$user = R::dispense( 'user' )->import( $inputs );
 			$user[ 'password' ] = password_hash( $user['password'], PASSWORD_DEFAULT ); // For password, store only its hash for security
 			$user[ 'code' ] = $code;
 			$user[ 'email_verified' ] = $email_verified;
@@ -248,10 +244,8 @@ class EzAuth
 			$user[ 'modified' ] = $now;
 			$userID  = R::store( $user );
 			if ( !$userID ) return $this->_callback( $callback, null, 'Failed to register the user. Please try again.' );
-			
-			// dd( $user );
 
-		# Send a link contain secret code to user's email
+		# Send a link contain confirmation code to user's email
 			if ( $verify_email ) {
 				// Make sure there is secret key
 					$secretKey = $this->config['auth']['secret_key'];
@@ -272,14 +266,13 @@ class EzAuth
 					$verificationLink = "{$domain}/{$verify_email}?token={$token}";
 
 				// Send email
-					$to = [ $user['email'],
-							$user['username'] ];
+					$to[] = $user['email'];
+					if ( !empty($user['username']) ) $to[] = $user[ 'username' ]; //<----------------------------- look weird
 					$vars = compact('verificationLink','user');
 					$result = $this->_sendMail( $to, 'email_verification', $vars, $mailErrorInfo );
-					// dd( $result );
 
 				if ( !$result ) {
-					// $user->delete();
+					$user->delete();
 					$this->_callback( $callback, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
 				} else {
 					$this->flash[ 'success' ] = 'A verification link has been sent to your email.';
@@ -303,15 +296,24 @@ class EzAuth
 				$secretKey = $this->config['auth']['secret_key'];
 				if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
 
-
 			$payload = JWT::decode( $token, new Key($secretKey,'HS256') );
 
-			dd( $payload );
-			return;
+
+		# Validate email and confirmation code
+
+				$validator = $this->validatorFactory->make( $payload,[
+								'email' => "required|email|max:255|exists:{$this->config['database']['user_table']},email",
+								'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i'
+							]);
+				if ( $validator->fails() ) {
+					$errors = $validator->errors()->all();
+					$errors = join( '<br>', $errors );
+					return $this->_callback( $callback, null, $errors );
+				}
 
 		# Make sure url query - email and code does exist
 			if ( empty($_GET['email']) || empty($_GET['code']) ) {
-				$this->_redirectCallback( $redirectTo, null, 'Invalid verification link' ); return;
+				return $this->_callback( $callback, null, 'Invalid verification link' );
 			}
 			$email = $_GET[ 'email' ];
 			$code = $_GET[ 'code' ];
