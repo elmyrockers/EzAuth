@@ -10,8 +10,11 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 use Illuminate\Validation\Factory as ValidatorFactory;
+use Illuminate\Validation\PresenceVerifierInterface;
 use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\Translator;
+
+
 
 /**
  * 
@@ -22,6 +25,8 @@ class EzAuth
 	
 	private $mailer;
 	private $flash;
+
+	private $validatorFactory;
 
 	public function __construct( $config )
 	{
@@ -90,8 +95,11 @@ class EzAuth
 			$current_domain = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
 			$defaultAuthConfig = [
 					'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
-					'signup_fields' => [ 'username','email', 'password', 'confirm_password' ],
-
+					'signup_fields' => [
+						'email' => [ 'required|string|email|max:255|unique:users,email', FILTER_SANITIZE_EMAIL ],
+						'password' => [['required','string','min:8','confirmed:confirm_password','regex:/[!@#$%^&*(),.?":{}|<>]/']],
+						'confirm_password' => [ 'required_with:password' ],
+					],
 					'domain' => $current_domain, // Current domain is default
 					'logout_redirect' => '/login.php',
 					'member_area' => [
@@ -104,6 +112,20 @@ class EzAuth
 			];
 			if ( !empty($auth) ) $auth = array_merge( $defaultAuthConfig, $auth );
 			$this->config[ 'auth' ] = $auth;
+			// dump( $auth );
+
+		// Set up translation and validation factory
+			$loader = new ArrayLoader();
+			$translator = new Translator( $loader, 'en' );
+			$this->validatorFactory = new ValidatorFactory( $translator );
+
+			// Define a custom unique rule
+				// $this->validatorFactory->extend( 'unique', function( $attribute, $value, $parameters, $validator ) {
+				// 	list( $table, $column ) = $parameters;
+				// 	$row = R::findOne( $table, "$column=?", [$value]);
+				// 	return $row === null;
+				// }, 'The :attribute has already been taken.');
+			$this->validatorFactory->setPresenceVerifier( new EzAuthPresenceVerifier() );
 
 		// Make sure session has been started
 			if ( !session_id() ) session_start();
@@ -163,7 +185,43 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
 
 		# Start form input validations. With 'illuminate/validation'
-			unset( $_POST['confirm_password'] );
+			$signupFields = $this->config[ 'auth' ][ 'signup_fields' ];
+			
+			// Get list of inputs, filters and validation rules
+				$inputs = [];
+				$filters = [];
+				$validationRules = [];
+				foreach ( $signupFields as $fieldName => $info ) {
+					if ( !is_array($info) ) {
+						throw new \Exception( "Error: Configuration value for 'auth.signup_fields.$fieldName' field must be of type array." );
+					}
+					$inputs[ $fieldName ] = $_POST[ $fieldName ] ?? null;
+					$validationRules[ $fieldName ] = array_shift( $info ) ?? [];
+					if ( $info ) $filters[ $fieldName ] = $info;
+				}
+				// dd( $inputs, $filters, $validationRules );
+
+			// Sanitation
+				foreach ( $filters as $fieldName => $filterIDs ) {
+					foreach ( $filterIDs as $i => $filterID ) {
+						$inputs[ $fieldName ] = filter_var( $inputs[$fieldName], $filterID );
+					}
+				}
+				// dd( $filters, $inputs );
+
+			// Validation
+				$validator = $this->validatorFactory->make( $inputs, $validationRules );
+				if ( $validator->fails() ) {
+					$errors = $validator->errors();
+					dd( $errors->all() );
+					// foreach ($errors->all() as $message) {
+					// 	echo $message . "<br>";
+					// }
+				} else {
+					echo "All data is valid!";
+				}
+				// dd( $validator );
+			// unset( $_POST['confirm_password'] );
 
 		# Make sure the account does not yet exists
 			// $user = R::findOne( 'user', 'username=? OR email=?', [$_POST['username'],$_POST['email']] );
@@ -309,4 +367,36 @@ class EzAuth
 			$this->flash[ 'success' ] = 'Your email has been verified successfully';
 			$this->_redirectCallback( $redirectTo, $user );
 	}
+}
+
+class EzAuthPresenceVerifier implements PresenceVerifierInterface {
+    public function getCount( $collection, $column, $value, $excludeId = null, $idColumn = 'id', array $extra = [] )
+    {
+        // Build the query
+        $query = R::findAll( $collection, "{$column} = ?", [$value] );
+
+        // Exclude the specified ID if provided
+        if ($excludeId !== null) {
+            $query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
+                return $item->{$idColumn} !== $excludeId;
+            });
+        }
+
+        return count($query);
+    }
+
+    public function getMultiCount( $collection, $column, array $values, $excludeId = null, $idColumn = 'id', array $extra = [] )
+    {
+        // Build the query
+        $query = R::findAll( $collection, "{$column} IN (" . implode(',', array_fill(0, count($values), '?')) . ")", $values );
+
+        // Exclude the specified ID if provided
+        if ($excludeId !== null) {
+            $query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
+                return $item->{$idColumn} !== $excludeId;
+            });
+        }
+
+        return count($query);
+    }
 }
