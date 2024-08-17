@@ -1,7 +1,7 @@
 <?php
 require_once '../vendor/autoload.php';
 use elmyrockers\EzAuth;
-use \RedBeanPHP\R as R;
+// use \RedBeanPHP\R as R;
 use Symfony\Component\ErrorHandler\Debug;
 Debug::enable();
 
@@ -23,8 +23,14 @@ Debug::enable();
 	const ROLE_ADMIN = 1;
 	const ROLE_SUPERADMIN = 2;
 	$auth = [
-			'id_fields' => [ 'email' ], // username / email / phone - follow table columns (its value must be unique)
-			'signup_fields' => [ 'username','email', 'password', 'confirm_password' ],
+			'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
+			'signup_fields' => [
+				// 'username' => [ 'required|string|min:3|max:20|alpha_dash|unique:users,username', FILTER_SANITIZE_FULL_SPECIAL_CHARS ],
+				'email' => [ 'required|string|email|max:255|unique:user,email', FILTER_SANITIZE_EMAIL ],
+				'password' => [['required','string','min:8','confirmed:confirm_password','regex:/[!@#$%^&*(),.?":{}|<>]/']],
+				'confirm_password' => [ 'required_with:password' ],
+				'test' => []
+			],
 
 			'logout_redirect' => '/auth/login/',
 			'member_area' => [
