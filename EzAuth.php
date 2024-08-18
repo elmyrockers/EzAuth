@@ -124,13 +124,28 @@ class EzAuth
 			$translator = new Translator( $loader, 'en' );
 			$this->validatorFactory = new ValidatorFactory( $translator );
 
-			// Define a custom unique rule
-				// $this->validatorFactory->extend( 'unique', function( $attribute, $value, $parameters, $validator ) {
-				// 	list( $table, $column ) = $parameters;
-				// 	$row = R::findOne( $table, "$column=?", [$value]);
-				// 	return $row === null;
-				// }, 'The :attribute has already been taken.');
-			$this->validatorFactory->setPresenceVerifier( new EzAuthPresenceVerifier() );
+			// Define custom validation rules
+				$this->validatorFactory->setPresenceVerifier( new EzAuthPresenceVerifier() ); // For 'unique' and 'exists' rules
+				$this->validatorFactory->extend( 'unverified_email', function( $attribute, $value, $parameters, $validator ) {
+					$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
+					if (!$email) return false;
+
+					// Check the 'user' table
+					$user = R::findOne( 'user', 'email=?', [$email] );
+					// dd( !$user['email_verified'] );
+
+					return !$user['email_verified'];
+				}, 'Verified email' );
+				$this->validatorFactory->extend( 'confirm_code', function( $attribute, $value, $parameters, $validator ) {
+					$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
+					if (!$email) return false;
+
+					// Check the 'user' table
+					$user = R::findOne( 'user', 'email=? AND code=?', [$email, $value] );
+
+					return $user !== null;
+				}, 'Invalid confirmation code' );
+			
 
 		// Make sure session has been started
 			if ( !session_id() ) session_start();
@@ -138,9 +153,25 @@ class EzAuth
 
 	private function _callback( $callback, $user, $errorInfo = null )
 	{
-		echo $errorInfo;
-		exit;
-		if ( $errorInfo ) return false;
+		//Set error message
+			$status = true;
+			if ( $errorInfo ) {
+				$this->flash[ 'danger' ] = $errorInfo;
+				$status = false;
+			}
+
+		//Redirect to
+			if ( is_string($callback) && !empty($callback) ) { // string
+				header( "Location: $callback" ); exit;
+		//Callback
+			} elseif ( is_callable($callback) ) { // callable
+				$url = $callback( $user );//redirect to
+				if ( is_string($url) ) {
+					header( "Location: $url" ); exit;
+				}
+			}
+
+		return [ $status, $this->flash, 'csrfToken' ];
 	}
 
 	private function _sendMail( $to, $emailType, $vars, &$errorInfo ) // For register & forgot_password
@@ -174,7 +205,7 @@ class EzAuth
 					$mailer->AltBody = $plain;
 
 					return $mailer->send();
-			} catch (Exception $e) {
+			} catch (Mail_Exception $e) {
 				$errorInfo = $mailer->ErrorInfo;
 				return false;
 			}
@@ -220,7 +251,7 @@ class EzAuth
 				if ( $validator->fails() ) {
 					$errors = $validator->errors()->all();
 					$errors = join( '<br>', $errors );
-					return $this->_callback( $callback, null, $errors );
+					return $this->_callback( null, null, $errors );
 				}
 				unset( $inputs['confirm_password'] );
 
@@ -242,8 +273,11 @@ class EzAuth
 			$now = R::isoDateTime();
 			$user[ 'created' ] = $now;
 			$user[ 'modified' ] = $now;
-			$userID  = R::store( $user );
-			if ( !$userID ) return $this->_callback( $callback, null, 'Failed to register the user. Please try again.' );
+			try {
+				R::store( $user );
+			} catch (\Exception $e ) {
+				return $this->_callback( null, null, "Error: {$e->getMessage()}" );
+			}
 
 		# Send a link contain confirmation code to user's email
 			if ( $verify_email ) {
@@ -262,7 +296,11 @@ class EzAuth
 						'email' => $user[ 'email' ],
 						'code' => $code
 					];
-					$token = JWT::encode( $payload, $secretKey, 'HS256' );
+					try {
+						$token = JWT::encode( $payload, $secretKey, 'HS256' );
+					} catch (\Exception $e ) {
+						return $this->_callback( null, null, "Error: Failed to create token. {$e->getMessage()}" );
+					}
 					$verificationLink = "{$domain}/{$verify_email}?token={$token}";
 
 				// Send email
@@ -273,17 +311,16 @@ class EzAuth
 
 				if ( !$result ) {
 					$user->delete();
-					$this->_callback( $callback, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
+					return $this->_callback( null, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" );
 				} else {
 					$this->flash[ 'success' ] = 'A verification link has been sent to your email.';
-					$this->_callback( $callback, $user );
-					return;
+					return $this->_callback( $callback, $user );
 				}
 			}
 
 		# Redirect user to other page & display success message
 			$this->flash[ 'success' ] = 'You have been registered successfully' ;
-			$this->_callback( $callback, $user );
+			return $this->_callback( $callback, $user );
 	}
 
 	public function verify_email( $callback = null )
@@ -295,110 +332,66 @@ class EzAuth
 			// Make sure there is secret key
 				$secretKey = $this->config['auth']['secret_key'];
 				if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
-
-			$payload = JWT::decode( $token, new Key($secretKey,'HS256') );
-
+				try {
+					$payload = (array) JWT::decode( $token, new Key($secretKey,'HS256') );
+				} catch (\Exception $e ) {
+					return $this->_callback( null, null, "Error: Failed to verify token. {$e->getMessage()}" );
+				}	
 
 		# Validate email and confirmation code
-
 				$validator = $this->validatorFactory->make( $payload,[
-								'email' => "required|email|max:255|exists:{$this->config['database']['user_table']},email",
-								'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i'
+								'email' => "required|email|max:255|exists:{$this->config['database']['user_table']},email|unverified_email",
+								'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i|confirm_code'
 							]);
 				if ( $validator->fails() ) {
-					$errors = $validator->errors()->all();
-					$errors = join( '<br>', $errors );
-					return $this->_callback( $callback, null, $errors );
+					// $messages = $validator->errors()->all();
+					return $this->_callback( null, null, 'Invalid verification link.' );
 				}
 
-		# Make sure url query - email and code does exist
-			if ( empty($_GET['email']) || empty($_GET['code']) ) {
-				return $this->_callback( $callback, null, 'Invalid verification link' );
-			}
-			$email = $_GET[ 'email' ];
-			$code = $_GET[ 'code' ];
-
-		# Make sure the email format is valid
-			$email = filter_var( $email, FILTER_VALIDATE_EMAIL );
-			if ( !$email ) {
-				$this->_redirectCallback( $redirectTo, null, 'Invalid email in verification link' ); return;
-			}
-			// if (!checkdnsrr($domain, 'MX')) {
-			// 	// domain is not valid
-			// }
-
-		# Make sure the email exists in our database
-			$user = $this->db->user[[ 'email'=>$email ]];
-			if ( !$user ) {
-				$this->_redirectCallback( $redirectTo, null, 'The email does not exist in our database' ); return;
-			}
-			// var_dump($user);
-		
-		# Make sure created time does not exceed 23 hours 59 minutes
-			$registeredTime = new \DateTime( $user['created'] );
-			$now = new \DateTime();
-			$diff = $registeredTime->diff( $now );
-			$days = $diff->d;
-			$hours = $diff->h;
-			$totalOfHours = ($days*24) + $hours;
-			if ( $totalOfHours >= 24 ) {
-				$this->_redirectCallback( $redirectTo, $user, 'Your verification link has expired' ); return;
-			}
-
-		# Make sure the code is valid
-			if ( $code != $user['code'] ) {
-				$this->_redirectCallback( $redirectTo, $user, 'Invalid code in verification link' ); return;
-			}
-
-		# Make sure the email did not yet verified
-			// var_dump( $user['verified'] );
-			if ( $user['verified'] ) {
-				$this->flash[ 'success' ] = 'Your email has been verified';
-				$this->_redirectCallback( $redirectTo, $user );
-				return;
-			}
-
-		# Verification link is valid. Then, set 'verified' column to 1
+		# Verification link is valid. Then, set 'email_verified' column to 1
 		# Redirect user to other page and display result message
-			$result = $user->update([ 'verified'=>1 ]);
-			if ( !$result ) {
-				$this->_redirectCallback( $redirectTo, $result, 'Failed to update verification data' ); return;
+			try {
+				$user = R::findOne( 'user', 'email=?', [$payload['email']] );
+				$user[ 'email_verified' ] = 1;
+				R::store( $user );
+			} catch(\Exception $e ) {
+				return $this->_callback( null, null, "Error: Failed to update email as verified. {$e->getMessage()}" );
 			}
 
 		# Redirect user or execute callback
 			$this->flash[ 'success' ] = 'Your email has been verified successfully';
-			$this->_redirectCallback( $redirectTo, $user );
+			return $this->_callback( $callback, $user );
 	}
 }
 
 class EzAuthPresenceVerifier implements PresenceVerifierInterface {
-    public function getCount( $collection, $column, $value, $excludeId = null, $idColumn = 'id', array $extra = [] )
-    {
-        // Build the query
-        $query = R::findAll( $collection, "{$column} = ?", [$value] );
+	public function getCount( $collection, $column, $value, $excludeId = null, $idColumn = 'id', array $extra = [] )
+	{
+		// Build the query
+		$query = R::findAll( $collection, "{$column} = ?", [$value] );
 
-        // Exclude the specified ID if provided
-        if ($excludeId !== null) {
-            $query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
-                return $item->{$idColumn} !== $excludeId;
-            });
-        }
+		// Exclude the specified ID if provided
+		if ($excludeId !== null) {
+			$query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
+				return $item->{$idColumn} !== $excludeId;
+			});
+		}
 
-        return count($query);
-    }
+		return count($query);
+	}
 
-    public function getMultiCount( $collection, $column, array $values, $excludeId = null, $idColumn = 'id', array $extra = [] )
-    {
-        // Build the query
-        $query = R::findAll( $collection, "{$column} IN (" . implode(',', array_fill(0, count($values), '?')) . ")", $values );
+	public function getMultiCount( $collection, $column, array $values, $excludeId = null, $idColumn = 'id', array $extra = [] )
+	{
+		// Build the query
+		$query = R::findAll( $collection, "{$column} IN (" . implode(',', array_fill(0, count($values), '?')) . ")", $values );
 
-        // Exclude the specified ID if provided
-        if ($excludeId !== null) {
-            $query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
-                return $item->{$idColumn} !== $excludeId;
-            });
-        }
+		// Exclude the specified ID if provided
+		if ($excludeId !== null) {
+			$query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
+				return $item->{$idColumn} !== $excludeId;
+			});
+		}
 
-        return count($query);
-    }
+		return count($query);
+	}
 }

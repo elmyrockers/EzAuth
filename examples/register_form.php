@@ -10,6 +10,7 @@
 	<body>
 		<div class="bg"></div>
 		<main class="form-signin">
+			<?=$flash ?>
 			<h1 class="h3">Register - EzAuth</h1>
 			<form method="post">
 				<div class="form-floating">
