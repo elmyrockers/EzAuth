@@ -78,11 +78,11 @@ $auth = new EzAuth( $config );
 $csrfToken = $auth->csrfToken();
 $flash = $auth->flashMessage();
 
-list( $status, $flash, $csrfToken ) = $auth->register( $callback );
-list( $status, $flash ) = $auth->verifyEmail( $callback ) );
-list( $status, $flash, $csrfToken ) = $auth->login( $callback );
-list( $status, $flash, $csrfToken ) = $auth->recoverPassword( $callback );
-list( $status, $flash, $csrfToken ) = $auth->resetPassword( $callback );
+list( $status, $flash, $csrfToken ) = $auth->register( $successCallback );
+list( $status, $flash ) = $auth->verifyEmail( $successCallback ) );
+list( $status, $flash, $csrfToken ) = $auth->login( $successCallback );
+list( $status, $flash, $csrfToken ) = $auth->recoverPassword( $successCallback );
+list( $status, $flash, $csrfToken ) = $auth->resetPassword( $successCallback );
 
 $user = $auth->memberArea( $allowedRoles );
 $user = $auth->isLoggedIn();
