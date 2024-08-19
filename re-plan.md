@@ -58,10 +58,10 @@ $config = [
 	'auth' => [
 		'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
 		'signup_fields' => [
-			'username' => [ 'required|string|min:3|max:20|alpha_dash|unique:users,username', FILTER_SANITIZE_FULL_SPECIAL_CHARS ],
-			'email' => [ 'required|string|email|max:255|unique:users,email', FILTER_SANITIZE_EMAIL ],
-			'password' => [ 'require|string|min:8|confirmed:confirm_password|regex:/[!@#$%^&*(),.?":{}|<>]/' ],
-			'confirm_password' => [ 'required_with:password' ],
+			'username' => [ 'required|string|min:3|max:20|alpha_dash|unique:user,username', FILTER_SANITIZE_FULL_SPECIAL_CHARS ],
+			'email' => [ 'required|string|email|max:255|unique:user,email', FILTER_SANITIZE_EMAIL ],
+			'password' => [['required','string','min:8','regex:/[!@#$%^&*(),.?":{}|<>]/']],
+			'confirm_password' => [ 'required|same:password' ]
 		],
 		'domain' => '', // https://yoursite.com
 		'logout_redirect' => '/login.php',
