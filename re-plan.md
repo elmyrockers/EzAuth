@@ -65,11 +65,17 @@ $config = [
 		],
 		'domain' => '', // https://yoursite.com
 		'logout_redirect' => '/login.php',
-		'member_area' => [
-			'/member/user/', // 0 - Role: User
-			'/member/admin/', // 1 - Role: Admin
-			'/member/superadmin/' // 2 - Role: Super-Admin
-		],
+		// 'member_area' => [ // Array
+		// 	'/member/user/', // 0 - Role: User
+		// 	'/member/admin/', // 1 - Role: Admin
+		// 	'/member/superadmin/' // 2 - Role: Super-Admin
+		// ],
+		'member_area' => function( $user ){
+			$role = $user[ 'role' ];
+			if ( $role == 0 ) return '/member/user/'; //0 - Role: User
+			if ( $role == 1 ) return '/member/admin/'; //1 - Role: Admin
+			if ( $role == 2 ) return '/member/superadmin/'; //2 - Role: Super-Admin
+		},
 		'verify_email' => '',  // Specify page for email verification
 		'reset_password' => '' // Specify page for reset password
 	]
