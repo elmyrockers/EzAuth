@@ -126,59 +126,6 @@ class EzAuth
 
 			// Define custom validation rules
 				$this->validatorFactory->setPresenceVerifier( new EzAuthPresenceVerifier() ); // For 'unique' and 'exists' rules
-
-				// Unverified E-mail
-					$this->validatorFactory->extend( 'unverified_email', function( $attribute, $value, $parameters, $validator ) {
-						$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
-						if (!$email) return false;
-
-						// Check the 'user' table
-						$userTable = $this->config['database']['user_table'];
-						$user = R::findOne( $userTable, 'email=?', [$email] );
-						if ( !$user ) return false;
-
-						return !$user['email_verified'];
-					}, 'Verified email' );
-
-				// Verified E-mail
-					$this->validatorFactory->extend( 'verified_email', function( $attribute, $value, $parameters, $validator ) {
-						$idField = $this->config[ 'auth' ][ 'id_field' ];
-						$idValue = $validator->getData()[ $idField ] ?? null; //Retrieve the 'id field' from the input data
-						if (!$idValue) return false;
-
-						// Check the 'user' table
-						$userTable = $this->config['database']['user_table'];
-						$user = R::findOne( $userTable, "$idField=?", [$idValue] );
-						if ( !$user ) return;
-
-						return $user['email_verified'];
-					}, 'Unverified email' );
-
-				// Verified Password
-					$this->validatorFactory->extend( 'verified_password', function( $attribute, $value, $parameters, $validator ) {
-						$idField = $this->config[ 'auth' ][ 'id_field' ];
-						$idValue = $validator->getData()[ $idField ] ?? null; //Retrieve the 'id field' from the input data
-						if (!$idValue) return false;
-
-						// Check the 'user' table
-						$userTable = $this->config['database']['user_table'];
-						$user = R::findOne( $userTable, "$idField=?", [$idValue] );
-						if ( !$user ) return false;
-
-						return password_verify( $value, $user['password'] );
-					}, 'Invalid password' );
-
-				// Confirm Code
-					$this->validatorFactory->extend( 'confirm_code', function( $attribute, $value, $parameters, $validator ) {
-						$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
-						if (!$email) return false;
-
-						// Check the 'user' table
-						$user_table = $this->config['database']['user_table'];
-						$user = R::findOne( $user_table, 'email=? AND code=?', [$email, $value] );
-
-						return $user !== null;
-					}, 'Invalid confirmation code' );//------------------------------------------------------------------------------
 			
 
 		// Make sure session has been started
@@ -471,7 +418,6 @@ class EzAuth
 
 		# Redirect user or execute callback
 			return $this->_callback( function($user) use ($callback) {
-
 				# Execute callback first
 					// Redirect to
 						if ( is_string($callback) && !empty($callback) ) { // string
@@ -481,7 +427,6 @@ class EzAuth
 							$url = $callback( $user );//redirect to
 							if ( is_string($url) ) return $url;
 						}
-
 
 				# No callback
 					$role = $user[ 'role' ];
