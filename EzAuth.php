@@ -385,20 +385,32 @@ class EzAuth
 			$payload[ 'code' ] = filter_var( $payload['code'], FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		# Validate email and confirmation code
+			$userTable = $this->config['database']['user_table'];
 			$validator = $this->validatorFactory->make( $payload,[
-							'email' => "required|email|max:255|exists:{$this->config['database']['user_table']},email|unverified_email",
-							'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i|confirm_code'
+							'email' => "required|email|max:255|exists:{$userTable},email",
+							'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i'
 						]);
 			if ( $validator->fails() ) {
 				// $messages = $validator->errors()->all();
 				return $this->_callback( null, null, 'Invalid verification link.' );
 			}
 
+		# Make sure email does not verified
+			$user = R::findOne( $userTable, 'email=?', [$payload['email']] );
+			$hasVerified = (bool) $user['email_verified'];
+			if ( $hasVerified ) {
+				return $this->_callback( null, null, 'Your email has been verified previously.' );
+			}
+
+		# Make sure the 'confirmation code' is valid
+			$invalid = $payload['code'] != $user['code'];
+			if ( $invalid ) return $this->_callback( null, null, 'Invalid confirmation code.' );
+			
+
 		# Verification link is valid. Then, set 'email_verified' column to 1
 		# Redirect user to other page and display result message
+			$user[ 'email_verified' ] = 1;
 			try {
-				$user = R::findOne( 'user', 'email=?', [$payload['email']] );
-				$user[ 'email_verified' ] = 1;
 				R::store( $user );
 			} catch(\Exception $e ) {
 				return $this->_callback( null, null, "Error: Failed to update email as verified. {$e->getMessage()}" );
