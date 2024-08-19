@@ -118,7 +118,7 @@ class EzAuth
 			$this->config[ 'auth' ] = $auth;
 			// dump( $auth );
 
-		// Set up translation and validation factory
+		// Set up translation and validation factory -----------------------------------------------------------------------------------
 			// $loader = new ArrayLoader();
 			$loader = new FileLoader(new Filesystem(), __DIR__ . '/lang');
 			$translator = new Translator( $loader, 'en' );
@@ -126,25 +126,59 @@ class EzAuth
 
 			// Define custom validation rules
 				$this->validatorFactory->setPresenceVerifier( new EzAuthPresenceVerifier() ); // For 'unique' and 'exists' rules
-				$this->validatorFactory->extend( 'unverified_email', function( $attribute, $value, $parameters, $validator ) {
-					$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
-					if (!$email) return false;
 
-					// Check the 'user' table
-					$user = R::findOne( 'user', 'email=?', [$email] );
-					// dd( !$user['email_verified'] );
+				// Unverified E-mail
+					$this->validatorFactory->extend( 'unverified_email', function( $attribute, $value, $parameters, $validator ) {
+						$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
+						if (!$email) return false;
 
-					return !$user['email_verified'];
-				}, 'Verified email' );
-				$this->validatorFactory->extend( 'confirm_code', function( $attribute, $value, $parameters, $validator ) {
-					$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
-					if (!$email) return false;
+						// Check the 'user' table
+						$userTable = $this->config['database']['user_table'];
+						$user = R::findOne( $userTable, 'email=?', [$email] );
+						if ( !$user ) return false;
 
-					// Check the 'user' table
-					$user = R::findOne( 'user', 'email=? AND code=?', [$email, $value] );
+						return !$user['email_verified'];
+					}, 'Verified email' );
 
-					return $user !== null;
-				}, 'Invalid confirmation code' );
+				// Verified E-mail
+					$this->validatorFactory->extend( 'verified_email', function( $attribute, $value, $parameters, $validator ) {
+						$idField = $this->config[ 'auth' ][ 'id_field' ];
+						$idValue = $validator->getData()[ $idField ] ?? null; //Retrieve the 'id field' from the input data
+						if (!$idValue) return false;
+
+						// Check the 'user' table
+						$userTable = $this->config['database']['user_table'];
+						$user = R::findOne( $userTable, "$idField=?", [$idValue] );
+						if ( !$user ) return;
+
+						return $user['email_verified'];
+					}, 'Unverified email' );
+
+				// Verified Password
+					$this->validatorFactory->extend( 'verified_password', function( $attribute, $value, $parameters, $validator ) {
+						$idField = $this->config[ 'auth' ][ 'id_field' ];
+						$idValue = $validator->getData()[ $idField ] ?? null; //Retrieve the 'id field' from the input data
+						if (!$idValue) return false;
+
+						// Check the 'user' table
+						$userTable = $this->config['database']['user_table'];
+						$user = R::findOne( $userTable, "$idField=?", [$idValue] );
+						if ( !$user ) return false;
+
+						return password_verify( $value, $user['password'] );
+					}, 'Invalid password' );
+
+				// Confirm Code
+					$this->validatorFactory->extend( 'confirm_code', function( $attribute, $value, $parameters, $validator ) {
+						$email = $validator->getData()[ 'email' ] ?? null; //Retrieve the email from the input data
+						if (!$email) return false;
+
+						// Check the 'user' table
+						$user_table = $this->config['database']['user_table'];
+						$user = R::findOne( $user_table, 'email=? AND code=?', [$email, $value] );
+
+						return $user !== null;
+					}, 'Invalid confirmation code' );//------------------------------------------------------------------------------
 			
 
 		// Make sure session has been started
@@ -212,6 +246,11 @@ class EzAuth
 		return true;
 	}
 
+	private function _saveToken( $user ) //For login function (Remember Me)
+	{
+		
+	}
+
 	public function flashMessage()
 	{
 		return $this->flash;
@@ -254,6 +293,9 @@ class EzAuth
 					return $this->_callback( null, null, $errors );
 				}
 				unset( $inputs['confirm_password'] );
+			
+			
+
 
 		# If user's email has to be validated, generate confirmation code
 			$code = null; $email_verified = 1;
@@ -336,17 +378,21 @@ class EzAuth
 					$payload = (array) JWT::decode( $token, new Key($secretKey,'HS256') );
 				} catch (\Exception $e ) {
 					return $this->_callback( null, null, "Error: Failed to verify token. {$e->getMessage()}" );
-				}	
+				}
+
+		# Sanitize payload
+			$payload[ 'email' ] = filter_var( $payload['email'], FILTER_SANITIZE_EMAIL );
+			$payload[ 'code' ] = filter_var( $payload['code'], FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		# Validate email and confirmation code
-				$validator = $this->validatorFactory->make( $payload,[
-								'email' => "required|email|max:255|exists:{$this->config['database']['user_table']},email|unverified_email",
-								'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i|confirm_code'
-							]);
-				if ( $validator->fails() ) {
-					// $messages = $validator->errors()->all();
-					return $this->_callback( null, null, 'Invalid verification link.' );
-				}
+			$validator = $this->validatorFactory->make( $payload,[
+							'email' => "required|email|max:255|exists:{$this->config['database']['user_table']},email|unverified_email",
+							'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i|confirm_code'
+						]);
+			if ( $validator->fails() ) {
+				// $messages = $validator->errors()->all();
+				return $this->_callback( null, null, 'Invalid verification link.' );
+			}
 
 		# Verification link is valid. Then, set 'email_verified' column to 1
 		# Redirect user to other page and display result message
@@ -361,6 +407,70 @@ class EzAuth
 		# Redirect user or execute callback
 			$this->flash[ 'success' ] = 'Your email has been verified successfully';
 			return $this->_callback( $callback, $user );
+	}
+
+	public function login( $callback = null )
+	{
+		# Make sure login form has been sent first
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
+
+		# Sanitize 'ID Field'. Then, set validation rules
+			$userTable = $this->config['database']['user_table'];
+			$idField = $this->config[ 'auth' ][ 'id_field' ];
+			if ( $idField == 'email' ) {
+				$_POST[ 'email' ] = filter_var( $_POST['email'], FILTER_SANITIZE_EMAIL );
+				$validationRules = "required|string|max:255|email|exists:{$userTable},email";
+			} else {
+				$_POST[ $idField ] = filter_var( $_POST[$idField], FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+				$validationRules = "required|string|max:255|alpha_dash|exists:{$userTable},{$idField}";
+			}
+
+		# Validate ID and password
+			$validator = $this->validatorFactory->make( $_POST,[
+							$idField => $validationRules,
+							'password' => 'required'
+						]);
+			if ( $validator->fails() ) {
+				$errors = $validator->errors()->all();
+				$errors = join( '<br>', $errors );
+				return $this->_callback( null, null, $errors );
+			}
+
+		# Does email has been verified?
+			$user = R::findOne( $userTable, "$idField=?", [$_POST[$idField]] );
+			$unverifiedEmail = empty($user['email_verified']);
+			if ( $unverifiedEmail ) return $this->_callback( null, null, 'Unverified email' );
+
+		# Verify password
+			$invalidPassword = !password_verify( $_POST['password'], $user['password'] );
+			if ( $invalidPassword ) return $this->_callback( null, null, 'Invalid password' );
+
+		# Give the user permission to access member area (access card)
+			$_SESSION[ 'auth' ] = [
+									'id' => $user[ 'id' ],
+									$idField => $_POST[$idField],
+									'role' => $user[ 'role' ]
+									];
+
+		# Save cookie token in user's browser
+			if ( !empty($_POST['remember']) ) {
+				$this->_saveToken( $user );
+			}
+
+		# Redirect user or execute callback
+			return $this->_callback( function($user) use ($callback) {
+				// Redirect to
+					if ( is_string($callback) && !empty($callback) ) { // string
+						return $callback;
+				// Callback
+					} elseif ( is_callable($callback) ) { // callable
+						$url = $callback( $user );//redirect to
+						if ( is_string($url) ) return $url;
+					}
+
+				$role = $user[ 'role' ];
+				return $this->config[ 'auth' ][ 'member_area' ][ $role ];
+			}, $user );
 	}
 }
 
