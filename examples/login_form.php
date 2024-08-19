@@ -12,18 +12,18 @@
 		<main class="form-signin">
 			<?=$flash ?>
 			<h1 class="h3">Login - EzAuth</h1>
-			<form action="">
+			<form method="post">
 				<div class="form-floating">
-					<input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" required value="test@gmail.com">
 					<label for="floatingInput">Email Address</label>
 				</div>
 				<div class="form-floating">
-					<input type="password" class="form-control" id="floatingPassword" placeholder="Password" required>
+					<input name="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" required value="Test@123">
 					<label for="floatingPassword">Password</label>
 				</div>
 				<div class="checkbox mb-3">
 					<div class="form-check form-switch">
-						<input class="form-check-input" type="checkbox" value="1" name="remember_me" id="rememberMeSwitch">
+						<input class="form-check-input" type="checkbox" value="1" name="remember" id="rememberMeSwitch">
 						<label class="form-check-label" for="rememberMeSwitch"> Remember Me</label>
 					</div>
 				</div>

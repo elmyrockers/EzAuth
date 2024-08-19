@@ -32,9 +32,9 @@ Debug::enable();
 
 			'logout_redirect' => '/auth/login/',
 			'member_area' => [
-				ROLE_USER => '/member/user/',
-				ROLE_ADMIN => '/member/admin/',
-				ROLE_SUPERADMIN => '/member/superadmin/'
+				ROLE_USER => '/elmyrockers/EzAuth/member/user/',
+				ROLE_ADMIN => '/elmyrockers/EzAuth/member/admin/',
+				ROLE_SUPERADMIN => '/elmyrockers/EzAuth/member/superadmin/'
 			],
 			'verify_email' => 'elmyrockers/EzAuth/examples/verify_email.php',  // Specify page for email verification
 			'reset_password' => '', // Specify page for reset password
