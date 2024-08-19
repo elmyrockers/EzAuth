@@ -471,17 +471,26 @@ class EzAuth
 
 		# Redirect user or execute callback
 			return $this->_callback( function($user) use ($callback) {
-				// Redirect to
-					if ( is_string($callback) && !empty($callback) ) { // string
-						return $callback;
-				// Callback
-					} elseif ( is_callable($callback) ) { // callable
-						$url = $callback( $user );//redirect to
-						if ( is_string($url) ) return $url;
-					}
 
-				$role = $user[ 'role' ];
-				return $this->config[ 'auth' ][ 'member_area' ][ $role ];
+				# Execute callback first
+					// Redirect to
+						if ( is_string($callback) && !empty($callback) ) { // string
+							return $callback;
+					// Callback
+						} elseif ( is_callable($callback) ) { // callable
+							$url = $callback( $user );//redirect to
+							if ( is_string($url) ) return $url;
+						}
+
+
+				# No callback
+					$role = $user[ 'role' ];
+					$memberArea = $this->config[ 'auth' ][ 'member_area' ];
+					if ( !$memberArea ) throw new \Exception( "Error: Configuration value for 'auth.member_area' cannot be empty." );
+
+					if ( is_callable($memberArea) ) return $memberArea( $user );
+					if ( is_array($memberArea) ) return $memberArea[ $role ];
+					if ( is_string($memberArea) ) return $memberArea;
 			}, $user );
 	}
 }
