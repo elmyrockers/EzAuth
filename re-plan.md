@@ -70,7 +70,7 @@ $config = [
 		// 	'/member/admin/', // 1 - Role: Admin
 		// 	'/member/superadmin/' // 2 - Role: Super-Admin
 		// ],
-		'member_area' => function( $user ){
+		'member_area' => function( $user ){ // Value for member area can be 'callable'
 			$role = $user[ 'role' ];
 			if ( $role == 0 ) return '/member/user/'; //0 - Role: User
 			if ( $role == 1 ) return '/member/admin/'; //1 - Role: Admin
