@@ -2,20 +2,22 @@
 namespace elmyrockers;
 
 use \RedBeanPHP\R as R;
-use elmyrockers\EzFlash;
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception as Mail_Exception;
+
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 use Illuminate\Validation\Factory as ValidatorFactory;
 use Illuminate\Validation\PresenceVerifierInterface;
-
 use Illuminate\Translation\Translator;
 // use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\FileLoader;
 use Illuminate\Filesystem\Filesystem;
+
+use elmyrockers\EzFlash;
 
 
 /**
@@ -29,6 +31,7 @@ class EzAuth
 	private $flash;
 
 	private $validatorFactory;
+	private $remember;
 
 	public function __construct( $config )
 	{
@@ -438,6 +441,57 @@ class EzAuth
 					if ( is_string($memberArea) ) return $memberArea;
 			}, $user );
 	}
+
+	public function extendRememberMe(EzAuthRememberMeInterface $remember )
+	{
+		$this->remember = $remember;
+	}
+
+	public function recoverPassword( $callback = null ) //need email input
+	{
+		dd( $this->config['auth']['reset_password'] );
+		if ( !$resetPasswordPage ) {
+			throw new Exception( '$resetPasswordPage parameter can\'t be empty', 1 );
+		}
+
+		# Make sure forgot password form has been sent first
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
+			$email = $_POST[ 'email' ];
+
+		# Make sure the account does really exists
+			$user = $this->db->user[compact('email')];
+			if ( !$user ) {
+				$this->_redirectCallback( $redirectTo, null, 'Your email does not exists in our system' ); return;
+			}
+
+		# Make sure email has been verified first. If not, give notice to the user
+			if ( !$user['verified'] ) {
+				$this->_redirectCallback( $redirectTo, $user, 'Unverified account. Please check your email for verification link.' ); return;
+			}
+
+		# Generate new secret code
+			$username = $user[ 'username' ];
+			$code = hash( 'sha256', $username.$email.microtime() ); //sha256 algorithm
+
+		# Save that secret code into database
+			$saved = $user->update(compact('code'));
+			if ( !$saved ) {
+				$this->_redirectCallback( $redirectTo, $user, 'Failed to reset your password. Please try again.' ); return;
+			}
+
+		# Send a link contain secret code to the user's email
+			$resetPasswordLink = "{$resetPasswordPage}?email={$email}&code={$code}";
+			$result = $this->_sendMail( [ $email, $username ], 'reset_password', compact('resetPasswordLink','user'), $mailErrorInfo );
+			if ( !$result ) {
+				$this->_redirectCallback( $redirectTo, $user, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
+			} else {
+				$this->flash[ 'success' ] = 'A link to reset your password has been sent to your email.';
+				$this->_redirectCallback( $redirectTo, $user );
+			}
+
+		# Redirect user or execute callback
+			$this->_redirectCallback( $redirectTo, $user );//----------------------------check this
+	}
 }
 
 class EzAuthPresenceVerifier implements PresenceVerifierInterface {
@@ -469,5 +523,25 @@ class EzAuthPresenceVerifier implements PresenceVerifierInterface {
 		}
 
 		return count($query);
+	}
+}
+
+
+
+interface EzAuthRememberMeInterface {
+	public function generateRememberMeToken( $user );
+	public function checkRememberMeToken();
+}
+
+class EzAuthRememberMe implements EzAuthRememberMeInterface
+{
+	public function generateRememberMeToken( $user )
+	{
+		
+	}
+
+	public function checkRememberMeToken()
+	{
+		
 	}
 }
