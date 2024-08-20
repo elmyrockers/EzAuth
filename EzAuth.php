@@ -135,6 +135,9 @@ class EzAuth
 
 		// Make sure session has been started
 			if ( !session_id() ) session_start();
+
+		// Extend default class for remember me feature
+			$this->extendRememberMe( new EzAuthRememberMe );
 	}
 
 	private function _callback( $callback, $user, $errorInfo = null )
@@ -196,11 +199,6 @@ class EzAuth
 				return false;
 			}
 		return true;
-	}
-
-	private function _saveToken( $user ) //For login function (Remember Me)
-	{
-		
 	}
 
 	public function flashMessage()
@@ -373,6 +371,11 @@ class EzAuth
 			return $this->_callback( $callback, $user );
 	}
 
+	public function extendRememberMe(EzAuthRememberMeInterface $remember )
+	{
+		$this->remember = $remember;
+	}
+
 	public function login( $callback = null )
 	{
 		# Make sure login form has been sent first
@@ -418,7 +421,7 @@ class EzAuth
 
 		# Save cookie token in user's browser
 			if ( !empty($_POST['remember']) ) {
-				$this->_saveToken( $user );
+				$this->remember->generateRememberMeToken( $user );
 			}
 
 		# Redirect user or execute callback
@@ -444,10 +447,7 @@ class EzAuth
 			}, $user );
 	}
 
-	public function extendRememberMe(EzAuthRememberMeInterface $remember )
-	{
-		$this->remember = $remember;
-	}
+
 
 	public function recoverPassword( $callback = null ) //need email input
 	{

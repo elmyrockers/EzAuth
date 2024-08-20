@@ -9,12 +9,12 @@ use elmyrockers\EzAuthRememberMeInterface;
 
 class EzAuthRememberMe implements EzAuthRememberMeInterface
 {
-	public function generateRememberMeToken( $user )
+	public function generateToken( $user )
 	{
-		
+		echo "hai apa kabar... token generated";
 	}
 
-	public function checkRememberMeToken()
+	public function verifyToken()
 	{
 		
 	}

@@ -7,6 +7,6 @@ namespace elmyrockers;
 
 
 interface EzAuthRememberMeInterface {
-	public function generateRememberMeToken( $user );
-	public function checkRememberMeToken();
+	public function generateToken( $user );
+	public function verifyToken();
 }
