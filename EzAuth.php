@@ -11,13 +11,15 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 use Illuminate\Validation\Factory as ValidatorFactory;
-use Illuminate\Validation\PresenceVerifierInterface;
 use Illuminate\Translation\Translator;
 // use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\FileLoader;
 use Illuminate\Filesystem\Filesystem;
 
 use elmyrockers\EzFlash;
+use elmyrockers\EzAuthPresenceVerifier;
+use elmyrockers\EzAuthRememberMeInterface;
+use elmyrockers\EzAuthRememberMe;
 
 
 /**
@@ -491,57 +493,5 @@ class EzAuth
 
 		# Redirect user or execute callback
 			$this->_redirectCallback( $redirectTo, $user );//----------------------------check this
-	}
-}
-
-class EzAuthPresenceVerifier implements PresenceVerifierInterface {
-	public function getCount( $collection, $column, $value, $excludeId = null, $idColumn = 'id', array $extra = [] )
-	{
-		// Build the query
-		$query = R::findAll( $collection, "{$column} = ?", [$value] );
-
-		// Exclude the specified ID if provided
-		if ($excludeId !== null) {
-			$query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
-				return $item->{$idColumn} !== $excludeId;
-			});
-		}
-
-		return count($query);
-	}
-
-	public function getMultiCount( $collection, $column, array $values, $excludeId = null, $idColumn = 'id', array $extra = [] )
-	{
-		// Build the query
-		$query = R::findAll( $collection, "{$column} IN (" . implode(',', array_fill(0, count($values), '?')) . ")", $values );
-
-		// Exclude the specified ID if provided
-		if ($excludeId !== null) {
-			$query = array_filter($query, function ($item) use ($excludeId, $idColumn) {
-				return $item->{$idColumn} !== $excludeId;
-			});
-		}
-
-		return count($query);
-	}
-}
-
-
-
-interface EzAuthRememberMeInterface {
-	public function generateRememberMeToken( $user );
-	public function checkRememberMeToken();
-}
-
-class EzAuthRememberMe implements EzAuthRememberMeInterface
-{
-	public function generateRememberMeToken( $user )
-	{
-		
-	}
-
-	public function checkRememberMeToken()
-	{
-		
 	}
 }
