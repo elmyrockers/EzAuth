@@ -5,6 +5,10 @@ use Illuminate\Validation\PresenceVerifierInterface;
 use \RedBeanPHP\R as R;
 
 class EzAuthPresenceVerifier implements PresenceVerifierInterface {
+	/**
+	 * @return int
+	 */
+	#[\ReturnTypeWillChange]
 	public function getCount( $collection, $column, $value, $excludeId = null, $idColumn = 'id', array $extra = [] )
 	{
 		// Build the query
@@ -20,6 +24,10 @@ class EzAuthPresenceVerifier implements PresenceVerifierInterface {
 		return count($query);
 	}
 
+	/**
+	 * @return int
+	 */
+	#[\ReturnTypeWillChange]
 	public function getMultiCount( $collection, $column, array $values, $excludeId = null, $idColumn = 'id', array $extra = [] )
 	{
 		// Build the query
