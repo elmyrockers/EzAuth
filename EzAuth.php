@@ -421,7 +421,7 @@ class EzAuth
 
 		# Save cookie token in user's browser
 			if ( !empty($_POST['remember']) ) {
-				$this->remember->generateRememberMeToken( $user );
+				$this->remember->generateToken( $user );
 			}
 
 		# Redirect user or execute callback
