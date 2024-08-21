@@ -373,8 +373,8 @@ class EzAuth
 
 	public function extendRememberMe(EzAuthRememberMeInterface $remember )
 	{
-		$remember->initialize( $this->config );
 		$this->remember = $remember;
+		$remember->initialize( $this->config );
 	}
 
 	public function login( $callback = null )
