@@ -40,12 +40,12 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				return false;
 			}
 			
-		# Save $plainToken into cookie
+		# Store $plainToken into cookie
 			# Generate JSON Web Token (JWT)
 				$payload = [
 					'token' => $plainToken,
 					'user_id' => $user[ 'id' ],
-					'user_agent' => $_SERVER['HTTP_USER_AGENT'], // Optional
+					'user_agent' => $_SERVER['HTTP_USER_AGENT'],
 					'exp' => $validIn7Days // Expire in 7 days
 				];
 				$jwt = JWT::encode( $payload, $secretKey, 'HS256' );
@@ -55,9 +55,9 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				$iv = openssl_random_pseudo_bytes( openssl_cipher_iv_length($algorithm) );
 				$encryptedJwt = openssl_encrypt( $jwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv );
 
-				$encryptedJwtWithIv = base64_encode($iv.$encryptedJwt); // Store IV and encrypted JWT together
+				$encryptedJwtWithIv = base64_encode($iv.$encryptedJwt); // Combine both IV and encrypted JWT together
 
-			# Save it in cookie
+			# Store it in cookie
 				return setcookie( 'auth_token', $encryptedJwtWithIv,[
 					'expires' => $validIn7Days,
 					'path' => '/',
