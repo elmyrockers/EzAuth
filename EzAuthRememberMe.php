@@ -4,6 +4,7 @@ namespace elmyrockers;
 use elmyrockers\EzAuthRememberMeInterface;
 use \RedBeanPHP\R as R;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 
 
@@ -69,6 +70,37 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 
 	public function verifyToken()
 	{
-		
+		$secretKey = $this->config[ 'auth' ][ 'secret_key' ];
+
+		# Retrieve $plainToken from cookie
+			# Retrieve encrypted JWT and IV from cookie
+				$encryptedJwtWithIv = $_COOKIE[ 'auth_token' ];
+
+			# Decrypt it
+				$algorithm = 'aes-256-cbc';
+
+				$encryptedJwtWithIv = base64_decode( $encryptedJwtWithIv ); //Extract the 'IV' and 'encryptedJWT'
+				$ivLength = openssl_cipher_iv_length($algorithm);
+				$iv = substr( $encryptedJwtWithIv, 0, $ivLength );
+				$encryptedJwt = substr( $encryptedJwtWithIv, $ivLength );
+
+				$jwt = openssl_decrypt( $encryptedJwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv );
+
+			# Decode and verify JWT signature
+				$payload = (array) JWT::decode( $jwt, new Key( $secretKey, 'HS256' ));
+
+			# Verify user-agent
+				if ( $payload['user_agent'] !== $_SERVER['HTTP_USER_AGENT'] ) return false;
+
+		# Retrieve $hashedToken from database
+			$rememberTable = $this->config[ 'database' ][ 'remember_table' ];
+			$remember = R::findOne( $rememberTable, 'user_id=?', [$payload['user_id']] );
+
+		# Compare $plainToken and $hashedToken
+			$cookieToken = hash_hmac( 'sha256', $payload['token'], $secretKey );
+			$dbToken = $remember[ 'token' ];
+			if ( !hash_equals($cookieToken,$dbToken) ) return false;
+
+		return true;				
 	}
 }
