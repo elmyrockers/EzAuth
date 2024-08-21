@@ -74,7 +74,8 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 
 		# Retrieve $plainToken from cookie
 			# Retrieve encrypted JWT and IV from cookie
-				$encryptedJwtWithIv = $_COOKIE[ 'auth_token' ];
+				$encryptedJwtWithIv = $_COOKIE[ 'auth_token' ] ?? null;
+				if ( !$encryptedJwtWithIv ) return false;
 
 			# Decrypt it
 				$algorithm = 'aes-256-cbc';
@@ -85,22 +86,29 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				$encryptedJwt = substr( $encryptedJwtWithIv, $ivLength );
 
 				$jwt = openssl_decrypt( $encryptedJwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv );
+				if ( !$jwt ) return false;
 
 			# Decode and verify JWT signature
-				$payload = (array) JWT::decode( $jwt, new Key( $secretKey, 'HS256' ));
-
+				try {
+					$payload = (array) JWT::decode( $jwt, new Key( $secretKey, 'HS256' ));
+				} catch (\Exception $e) {
+					return false;
+				}
+				
 			# Verify user-agent
 				if ( $payload['user_agent'] !== $_SERVER['HTTP_USER_AGENT'] ) return false;
 
 		# Retrieve $hashedToken from database
 			$rememberTable = $this->config[ 'database' ][ 'remember_table' ];
 			$remember = R::findOne( $rememberTable, 'user_id=?', [$payload['user_id']] );
+			if ( !$remember ) return false;
 
 		# Compare $plainToken and $hashedToken
 			$cookieToken = hash_hmac( 'sha256', $payload['token'], $secretKey );
 			$dbToken = $remember[ 'token' ];
 			if ( !hash_equals($cookieToken,$dbToken) ) return false;
 
-		return true;				
+		# If success, get and return data about user details
+			return $remember->user;
 	}
 }
