@@ -448,8 +448,6 @@ class EzAuth
 			}, $user );
 	}
 
-
-
 	public function recoverPassword( $callback = null ) //need email input
 	{
 		dd( $this->config['auth']['reset_password'] );
