@@ -18,6 +18,7 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 	public function generateToken( $user )
 	{
 		$secretKey = $this->config[ 'auth' ][ 'secret_key' ];
+		$validIn7Days = strtotime( '+7 days' );
 
 		# Generate token
 			$plainToken = bin2hex( random_bytes(32) );
@@ -30,7 +31,7 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 			$currentIsoDateTime = R::isoDateTime();
 			$remember[ 'user_id' ] = $user[ 'id' ];
 			$remember[ 'token' ] = $hashedToken;
-			$remember[ 'expires_at' ] = date( 'Y-m-d H:i:s', strtotime('+7 days') );
+			$remember[ 'expires_at' ] = date( 'Y-m-d H:i:s', $validIn7Days );
 			$remember[ 'created' ] = $currentIsoDateTime;
 			$remember[ 'modified' ] = $currentIsoDateTime;
 			try {
@@ -41,12 +42,11 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 			
 		# Save $plainToken into cookie
 			# Generate JSON Web Token (JWT)
-				$in7Days = time() + (60 * 60 * 24 * 7); // Expire in 7 days
 				$payload = [
 					'token' => $plainToken,
 					'user_id' => $user[ 'id' ],
 					'user_agent' => $_SERVER['HTTP_USER_AGENT'], // Optional
-					'exp' => $in7Days // Expire in 7 days
+					'exp' => $validIn7Days // Expire in 7 days
 				];
 				$jwt = JWT::encode( $payload, $secretKey, 'HS256' );
 
@@ -58,13 +58,12 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				$encryptedJwtWithIv = base64_encode($iv.$encryptedJwt); // Store IV and encrypted JWT together
 
 			# Save it in cookie
-				return setcookie( 'auth_token', $encryptedJwtWithIv, [
-					'expires' => $in7Days,
+				return setcookie( 'auth_token', $encryptedJwtWithIv,[
+					'expires' => $validIn7Days,
 					'path' => '/',
-					'domain' => $this->config[ 'auth' ][ 'domain' ],
 					'samesite' => 'Strict',
 					'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
-					'httponly' => true,
+					'httponly' => true
 				]);
 	}
 
