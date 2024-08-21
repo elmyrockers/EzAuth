@@ -8,6 +8,6 @@ namespace elmyrockers;
 
 interface EzAuthRememberMeInterface {
 	public function initialize( $config );
-	public function generateToken( $user );
-	public function verifyToken();
+	public function generateToken(\RedBeanPHP\OODBBean $user ):bool;
+	public function verifyToken():bool|\RedBeanPHP\OODBBean;
 }

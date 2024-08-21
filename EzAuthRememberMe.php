@@ -16,7 +16,7 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 		$this->config = $config;
 	}
 
-	public function generateToken( $user )
+	public function generateToken(\RedBeanPHP\OODBBean $user ):bool
 	{
 		$secretKey = $this->config[ 'auth' ][ 'secret_key' ];
 		$validIn7Days = strtotime( '+7 days' );
@@ -68,7 +68,7 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				]);
 	}
 
-	public function verifyToken()
+	public function verifyToken():bool|\RedBeanPHP\OODBBean
 	{
 		$secretKey = $this->config[ 'auth' ][ 'secret_key' ];
 
