@@ -10,7 +10,7 @@ use Firebase\JWT\JWT;
 class EzAuthRememberMe implements EzAuthRememberMeInterface
 {
 	private $config;
-	public function __construct( $config )
+	public function initialize( $config )
 	{
 		$this->config = $config;
 	}

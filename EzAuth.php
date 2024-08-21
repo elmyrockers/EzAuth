@@ -137,7 +137,7 @@ class EzAuth
 			if ( !session_id() ) session_start();
 
 		// Extend default class for remember me feature
-			$this->extendRememberMe( new EzAuthRememberMe($this->config) );
+			$this->extendRememberMe( new EzAuthRememberMe );
 	}
 
 	private function _callback( $callback, $user, $errorInfo = null )
@@ -373,6 +373,7 @@ class EzAuth
 
 	public function extendRememberMe(EzAuthRememberMeInterface $remember )
 	{
+		$remember->initialize( $this->config );
 		$this->remember = $remember;
 	}
 
