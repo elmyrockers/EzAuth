@@ -5,4 +5,4 @@ list( $status, $flash, $csrfToken ) = $ezauth->register();
 
 
 
-include 'register_form.php';
+include 'forms/register_form.php';
