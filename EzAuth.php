@@ -163,7 +163,7 @@ class EzAuth
 		return [ $status, $this->flash, 'csrfToken' ];
 	}
 
-	private function _sendMail( $to, $emailType, $vars, &$errorInfo ) // For register & forgot_password
+	private function _sendMail( $to, $emailType, $vars, &$errorInfo ) // For register & recover_password
 	{
 		# Email Configuration
 			$template_dir = $this->config[ 'email' ][ 'template_dir' ];
@@ -521,5 +521,10 @@ class EzAuth
 		# Execute callback
 			$this->flash[ 'success' ] = 'A link to reset your password has been sent to your email.';
 			return $this->_callback( $callback, $user );
+	}
+
+	public function resetPassword( $callback = null )
+	{
+		
 	}
 }
