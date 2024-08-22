@@ -315,7 +315,7 @@ class EzAuth
 			return $this->_callback( $callback, $user );
 	}
 
-	public function verify_email( $callback = null )
+	public function verifyEmail( $callback = null )
 	{
 		# Validate token
 			$token = $_GET[ 'token' ] ?? null;
