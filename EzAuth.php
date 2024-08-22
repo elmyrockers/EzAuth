@@ -450,47 +450,76 @@ class EzAuth
 
 	public function recoverPassword( $callback = null ) //need email input
 	{
-		dd( $this->config['auth']['reset_password'] );
-		if ( !$resetPasswordPage ) {
-			throw new Exception( '$resetPasswordPage parameter can\'t be empty', 1 );
-		}
+		// Make sure there is secret key
+			$secretKey = $this->config['auth']['secret_key'];
+			if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
+
+		# Check config for auth.reset_password
+			$resetPassword = $this->config['auth']['reset_password'];
+			if ( !$resetPassword ) {
+				throw new \Exception( 'Error: Configuration value for \'auth.reset_password\' cannot be empty.' );
+			}
 
 		# Make sure forgot password form has been sent first
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
-			$email = $_POST[ 'email' ];
+
+		# Sanitize and validate
+			$email = filter_input( INPUT_POST, 'email', FILTER_SANITIZE_EMAIL );
+			$validator = $this->validatorFactory->make( compact('email'), ['email'=>"required|string|email|max:255"] );
+			if ( $validator->fails() ) {
+				$errors = $validator->errors()->all();
+				$errors = join( '<br>', $errors );
+				return $this->_callback( null, null, $errors );
+			}
 
 		# Make sure the account does really exists
-			$user = $this->db->user[compact('email')];
-			if ( !$user ) {
-				$this->_redirectCallback( $redirectTo, null, 'Your email does not exists in our system' ); return;
-			}
+			$userTable = $this->config[ 'database' ][ 'user_table' ];
+			$user = R::findOne( $userTable, 'email=?', [$email] );
+			if ( !$user ) return $this->_callback( null, null, 'The email is invalid' );
 
-		# Make sure email has been verified first. If not, give notice to the user
-			if ( !$user['verified'] ) {
-				$this->_redirectCallback( $redirectTo, $user, 'Unverified account. Please check your email for verification link.' ); return;
-			}
+		# Generate confirmation link
+			# Generate confirmation code first
+				$code = bin2hex(random_bytes(16));
 
-		# Generate new secret code
-			$username = $user[ 'username' ];
-			$code = hash( 'sha256', $username.$email.microtime() ); //sha256 algorithm
+			# Save the confirmation code into database
+				$user[ 'code' ] = $code;
+				try {
+					R::store( $user );
+				} catch (\Exception $e) {
+					return $this->_callback( null, null, "Error: {$e->getMessage()}" );
+				}
 
-		# Save that secret code into database
-			$saved = $user->update(compact('code'));
-			if ( !$saved ) {
-				$this->_redirectCallback( $redirectTo, $user, 'Failed to reset your password. Please try again.' ); return;
-			}
+			# Generate a link contain JSON Web Token (JWT)
+				$domain = $this->config[ 'auth' ][ 'domain' ];
+				$now = time();
+				$payload = [
+					'iss' => $domain,
+					'aud' => $domain,
+					'iat' => $now,
+					'exp' => $now + 3600, // Valid for 1 hour
+					'email' => $user[ 'email' ],
+					'code' => $code
+				];
+				try {
+					$token = JWT::encode( $payload, $secretKey, 'HS256' );
+				} catch (\Exception $e ) {
+					return $this->_callback( null, null, "Error: {$e->getMessage()}" );
+				}
+				$resetPasswordLink = "{$domain}/{$resetPassword}?token={$token}";
 
-		# Send a link contain secret code to the user's email
-			$resetPasswordLink = "{$resetPasswordPage}?email={$email}&code={$code}";
-			$result = $this->_sendMail( [ $email, $username ], 'reset_password', compact('resetPasswordLink','user'), $mailErrorInfo );
+		# Send it to user's email
+			$to[] = $user['email'];
+			if ( !empty($user['username']) ) $to[] = $user[ 'username' ]; //<----------------------------- look weird
+			$vars = compact('resetPasswordLink','user');
+
+			$result = $this->_sendMail( $to, 'reset_password', $vars, $mailErrorInfo );
 			if ( !$result ) {
-				$this->_redirectCallback( $redirectTo, $user, "Message could not be sent. Mailer Error: {$mailErrorInfo}" ); return;
-			} else {
-				$this->flash[ 'success' ] = 'A link to reset your password has been sent to your email.';
-				$this->_redirectCallback( $redirectTo, $user );
+				$user->delete();
+				return $this->_callback( null, null, "Message could not be sent. Mailer Error: {$mailErrorInfo}" );
 			}
 
-		# Redirect user or execute callback
-			$this->_redirectCallback( $redirectTo, $user );//----------------------------check this
+		# Execute callback
+			$this->flash[ 'success' ] = 'A link to reset your password has been sent to your email.';
+			return $this->_callback( $callback, $user );
 	}
 }
