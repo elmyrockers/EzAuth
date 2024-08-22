@@ -25,13 +25,7 @@
 					<input name="confirm_password" type="password" class="form-control" id="confirm_password" placeholder="Confirm Password" required value="Test@123">
 					<label for="confirm_password">Confirm Password</label>
 				</div>
-				<!-- <div class="checkbox mb-3">
-					<div class="form-check form-switch">
-						<input class="form-check-input" type="checkbox" value="1" name="remember" id="rememberMeSwitch">
-						<label class="form-check-label" for="rememberMeSwitch"> Remember me</label>
-					</div>
-				</div> -->
-				<button class="w-100 btn btn-lg" type="submit">Sign Up</button>
+				<button class="w-100 btn btn-lg" type="submit">Reset</button>
 			</form>
 			<p class="copyright">&copy; 2024 EzAuth</p>
 		</main>
