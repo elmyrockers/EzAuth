@@ -611,4 +611,30 @@ class EzAuth
 			$this->flash[ 'success' ] = 'Your password was successfully changed';
 			return $this->_callback( $callback, $user );
 	}
+
+	public function isLoggedIn()
+	{
+		# Check whether the user's session exists
+			$auth = $_SESSION[ 'auth' ] ?? null;
+			if ( $auth ){
+				$userTable = $this->config['database']['user_table'];
+				$user = R::load( $userTable, $auth['id'] );
+				return $user;
+			}
+			
+		# If not, then check browser's cookie
+			$user = $this->remember->verifyToken();
+			if ( !$user ) return false;
+
+		# If auth_token in browser's cookie is valid, then login user automatically
+		# Give the user permission to access member area (access card)
+			$idField = $this->config[ 'auth' ][ 'id_field' ];
+			$_SESSION[ 'auth' ] = [
+									'id' => $user[ 'id' ],
+									$idField => $user[ $idField ],
+									'role' => $user[ 'role' ]
+									];
+
+		return $user;
+	}
 }
