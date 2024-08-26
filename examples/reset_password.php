@@ -1,7 +1,6 @@
 <?php
 require_once 'config.php';
-list( $status, $flash, $csrfToken ) = $ezauth->resetPassword();
-
+list( $status, $flash, $csrfToken ) = $ezauth->resetPassword( 'login.php', $user );
 
 
 

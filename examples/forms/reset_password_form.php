@@ -14,15 +14,15 @@
 			<h1 class="h3">Reset Password</h1>
 			<form method="post">
 				<div class="form-floating">
-					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" readonly value="test@gmail.com">
+					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" readonly value="<?=$user['email'] ?>">
 					<label for="floatingInput">Email Address</label>
 				</div>
 				<div class="form-floating">
-					<input name="password" type="password" class="form-control mb-0" id="password" placeholder="Password" required value="Test@123">
+					<input name="password" type="password" class="form-control mb-0" id="password" placeholder="Password" required>
 					<label for="password">Password</label>
 				</div>
 				<div class="form-floating mb-4">
-					<input name="confirm_password" type="password" class="form-control" id="confirm_password" placeholder="Confirm Password" required value="Test@123">
+					<input name="confirm_password" type="password" class="form-control" id="confirm_password" placeholder="Confirm Password" required>
 					<label for="confirm_password">Confirm Password</label>
 				</div>
 				<button class="w-100 btn btn-lg" type="submit">Reset</button>
