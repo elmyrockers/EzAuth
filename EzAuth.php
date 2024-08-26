@@ -324,10 +324,20 @@ class EzAuth
 			// Make sure there is secret key
 				$secretKey = $this->config['auth']['secret_key'];
 				if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
+
+			// Validate
 				try {
 					$payload = (array) JWT::decode( $token, new Key($secretKey,'HS256') );
 				} catch (\Exception $e ) {
-					return $this->_callback( null, null, "Error: Failed to verify token. {$e->getMessage()}" );
+					// return $this->_callback( null, null, "Error: Failed to verify token. {$e->getMessage()}" );
+					return $this->_callback( null, null, "Invalid Token" );
+				}
+
+				$domain = $this->config[ 'auth' ][ 'domain' ];
+				$invalidIssuer = $payload['iss'] !== $domain;
+				$invalidAudience = $payload['aud'] !== $domain;
+				if ( $invalidIssuer || $invalidAudience ) {
+					return $this->_callback( null, null, "Invalid Token" );
 				}
 
 		# Sanitize payload
@@ -525,6 +535,44 @@ class EzAuth
 
 	public function resetPassword( $callback = null )
 	{
-		
+		# Validate token
+			$token = $_GET[ 'token' ] ?? null;
+			if ( !$token ) return $this->_callback( null, null, "The token does not exists." );
+
+			// Make sure there is secret key
+				$secretKey = $this->config['auth']['secret_key'];
+				if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
+
+			// Get payload
+				try {
+					$payload = (array) JWT::decode( $token, new Key($secretKey,'HS256') );
+				} catch (\Exception $e ) {
+					return $this->_callback( null, null, "Error: {$e->getMessage()}" );
+				}
+
+
+			dump( $token, $payload );
+
+			exit;
+
+		# Make sure the email format is valid
+			$email = filter_var( $email, FILTER_VALIDATE_EMAIL );
+			if ( !$email ) {
+				$this->_redirectCallback( $redirectTo, null, 'Invalid email in reset password link' ); return;
+			}
+			// if (!checkdnsrr($domain, 'MX')) {
+			// 	// domain is not valid
+			// }
+
+		# Make sure the email exists in our database
+			$user = $this->db->user[[ 'email'=>$email ]];
+			if ( !$user ) {
+				$this->_redirectCallback( $redirectTo, null, 'The email does not exist in our database' ); return;
+			}
+
+		# Make sure the code is valid
+			if ( $code != $user['code'] ) {
+				$this->_redirectCallback( $redirectTo, $user, 'Invalid code in reset password link' ); return;
+			}
 	}
 }
