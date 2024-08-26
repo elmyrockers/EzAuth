@@ -211,7 +211,7 @@ class EzAuth
 	public function register( $callback = null )
 	{
 		# Make sure register form has been sent first
-			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Start form input validations. With 'illuminate/validation'
 			$signupFields = $this->config[ 'auth' ][ 'signup_fields' ];
@@ -391,9 +391,8 @@ class EzAuth
 
 	public function login( $callback = null )
 	{
-		// exit;
 		# Make sure login form has been sent first
-			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return ;
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Sanitize 'ID Field'. Then, set validation rules
 			$userTable = $this->config['database']['user_table'];
@@ -439,7 +438,6 @@ class EzAuth
 			}
 
 		# Redirect user or execute callback
-			exit;
 			return $this->_callback( function($user) use ($callback) {
 				# Execute callback first
 					// Redirect to

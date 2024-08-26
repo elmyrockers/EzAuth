@@ -14,7 +14,7 @@
 			<h1 class="h3">Reset Password</h1>
 			<form method="post">
 				<div class="form-floating">
-					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" required value="test@gmail.com">
+					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" readonly value="test@gmail.com">
 					<label for="floatingInput">Email Address</label>
 				</div>
 				<div class="form-floating">

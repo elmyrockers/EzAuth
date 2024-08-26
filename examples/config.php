@@ -1,7 +1,7 @@
 <?php
 require_once '../vendor/autoload.php';
 use elmyrockers\EzAuth;
-// use \RedBeanPHP\R as R;
+use \RedBeanPHP\R as R;
 use Symfony\Component\ErrorHandler\Debug;
 Debug::enable();
 
@@ -32,17 +32,31 @@ Debug::enable();
 
 			'logout_redirect' => '/auth/login/',
 			'member_area' => [
-				ROLE_USER => '/elmyrockers/EzAuth/member/user/',
-				ROLE_ADMIN => '/elmyrockers/EzAuth/member/admin/',
-				ROLE_SUPERADMIN => '/elmyrockers/EzAuth/member/superadmin/'
+				ROLE_USER => '/member/user/',
+				ROLE_ADMIN => '/member/admin/',
+				ROLE_SUPERADMIN => '/member/superadmin/'
 			],
-			'verify_email' => 'elmyrockers/EzAuth/examples/verify_email.php',  // Specify page for email verification
-			'reset_password' => '', // Specify page for reset password
+			'verify_email' => 'verify_email.php',  // Specify page for email verification
+			// 'reset_password' => '', // Specify page for reset password
+			'reset_password' => 'reset_password.php', // Specify page for reset password
+
+			// Generate 256-bit Secret Key using these functions
+			// $secretKey = bin2hex( random_bytes( 32 )); // Cryptographically secure
 			'secret_key' => '427a656ece850f275ae8fc5cc50b6d6a25b2b8b3b09925d6fab93cf062d015c8'
 	];
-	// $ezauth = new EzAuth(compact( 'database', 'email', 'message', 'auth' ));
 	$ezauth = new EzAuth(compact( 'database', 'email', 'auth' ));
 
-// Generate 256-bit Secret Key using these functions
-// $secretKey = bin2hex( random_bytes( 32 )); // Cryptographically secure
+
+
+
+
+
 // dump( $secretKey );
+	// $database[ 'remember_table' ] = 'remember';
+	// $auth[ 'domain' ] = 'localhost';
+	// $auth[ 'secret_key' ] = '427a656ece850f275ae8fc5cc50b6d6a25b2b8b3b09925d6fab93cf062d015c8';
+	// $user = R::findOne( 'user' );
+	// $remember = new elmyrockers\EzAuthRememberMe;
+	// $remember->initialize(compact( 'database', 'email', 'auth' ));
+	// $result = $remember->verifyToken();
+	// dump( $result );
