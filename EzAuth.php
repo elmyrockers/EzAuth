@@ -140,13 +140,15 @@ class EzAuth
 			$this->extendRememberMe( new EzAuthRememberMe );
 	}
 
-	private function _callback( $callback, $user, $errorInfo = null )
+	private function _callback( $callback = null, $user = null, $errorInfo = null )
 	{
 		//Set error message
-			$status = true;
+			$status = null;
 			if ( $errorInfo ) {
 				$this->flash[ 'danger' ] = $errorInfo;
 				$status = false;
+			} elseif ( $callback ) {
+				$status = true;
 			}
 
 		//Redirect to
@@ -389,8 +391,9 @@ class EzAuth
 
 	public function login( $callback = null )
 	{
+		// exit;
 		# Make sure login form has been sent first
-			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return ;
 
 		# Sanitize 'ID Field'. Then, set validation rules
 			$userTable = $this->config['database']['user_table'];
@@ -436,6 +439,7 @@ class EzAuth
 			}
 
 		# Redirect user or execute callback
+			exit;
 			return $this->_callback( function($user) use ($callback) {
 				# Execute callback first
 					// Redirect to
