@@ -535,7 +535,7 @@ class EzAuth
 			return $this->_callback( $callback, $user );
 	}
 
-	public function resetPassword( $callback = null )
+	public function resetPassword( $callback = null, &$user = null )
 	{
 		# Validate token
 			$token = $_GET[ 'token' ] ?? null;
@@ -549,32 +549,66 @@ class EzAuth
 				try {
 					$payload = (array) JWT::decode( $token, new Key($secretKey,'HS256') );
 				} catch (\Exception $e ) {
-					return $this->_callback( null, null, "Error: {$e->getMessage()}" );
+					// return $this->_callback( null, null, "Error: {$e->getMessage()}" );
+					return $this->_callback( null, null, "Invalid Token" );
 				}
 
+				$domain = $this->config[ 'auth' ][ 'domain' ];
+				$invalidIssuer = $payload['iss'] !== $domain;
+				$invalidAudience = $payload['aud'] !== $domain;
+				if ( $invalidIssuer || $invalidAudience ) {
+					return $this->_callback( null, null, "Invalid Token" );
+				}
 
-			dump( $token, $payload );
+			// Sanitize and validate
+				# Sanitize
+					$payload[ 'email' ] = filter_var( $payload['email'], FILTER_SANITIZE_EMAIL );
+					$payload[ 'code' ] = filter_var( $payload['code'], FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
-			exit;
+				# Validate
+					$userTable = $this->config['database']['user_table'];
+					$validator = $this->validatorFactory->make( $payload,[
+									'email' => "required|email|max:255",
+									'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i'
+								]);
+					if ( $validator->fails() ) {
+						return $this->_callback( null, null, 'Invalid reset password link.' );
+					}
 
-		# Make sure the email format is valid
-			$email = filter_var( $email, FILTER_VALIDATE_EMAIL );
-			if ( !$email ) {
-				$this->_redirectCallback( $redirectTo, null, 'Invalid email in reset password link' ); return;
+					# Make sure the email does exists in our database
+						$user = R::findOne( $userTable, 'email=?', [$payload['email']] );
+						if ( !$user ) return $this->_callback( null, null, 'Invalid reset password link.' );
+
+					# Make sure the code is valid
+						if ( $payload['code'] != $user['code'] ) return $this->_callback( null, null, 'Invalid reset password link.' );
+
+		# 'Reset password' link is valid.--------------------------------------------------------------------------------------------------
+		# Make sure reset password form has been sent
+			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
+
+		# Validate inputs
+			$validator = $this->validatorFactory->make( $_POST,[
+							'password' => ['required','string','min:8','regex:/[!@#$%^&*(),.?":{}|<>]/'],
+							'confirm_password' => 'required|same:password'
+						]);
+			if ( $validator->fails() ) {
+				$errors = $validator->errors()->all();
+				$errors = join( '<br>', $errors );
+				return $this->_callback( null, null, $errors );
 			}
-			// if (!checkdnsrr($domain, 'MX')) {
-			// 	// domain is not valid
-			// }
 
-		# Make sure the email exists in our database
-			$user = $this->db->user[[ 'email'=>$email ]];
-			if ( !$user ) {
-				$this->_redirectCallback( $redirectTo, null, 'The email does not exist in our database' ); return;
+		# Then, reset value in 'password' column
+			$userTable = $this->config['database']['user_table'];
+			$user[ 'password' ] = password_hash( $_POST['password'], PASSWORD_DEFAULT ); // Store only its hash for security
+			$user[ 'email_verified' ] = 1;
+			try {
+				R::store( $user );
+			} catch (\Exception $e) {
+				return $this->_callback( null, null, "Failed to update your password." );
 			}
 
-		# Make sure the code is valid
-			if ( $code != $user['code'] ) {
-				$this->_redirectCallback( $redirectTo, $user, 'Invalid code in reset password link' ); return;
-			}
+		# Redirect user or execute callback
+			$this->flash[ 'success' ] = 'Your password was successfully changed';
+			return $this->_callback( $callback, $user );
 	}
 }
