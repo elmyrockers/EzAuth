@@ -473,7 +473,7 @@ class EzAuth
 			}
 
 		# Make sure forgot password form has been sent first
-			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return;
+			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Sanitize and validate
 			$email = filter_input( INPUT_POST, 'email', FILTER_SANITIZE_EMAIL );
