@@ -49,7 +49,10 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 			
 		# Store $plainToken into cookie
 			# Generate JSON Web Token (JWT)
+				$domain = $this->config[ 'auth' ][ 'domain' ];
 				$payload = [
+					'iss' => $domain,
+					'aud' => $domain,
 					'token' => $plainToken,
 					'user_id' => $user[ 'id' ],
 					'user_agent' => $_SERVER['HTTP_USER_AGENT'],
@@ -100,8 +103,14 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				} catch (\Exception $e) {
 					return false;
 				}
+
+			# Validate issuer and audience
+				$domain = $this->config[ 'auth' ][ 'domain' ];
+				$invalidIssuer = $payload['iss'] !== $domain;
+				$invalidAudience = $payload['aud'] !== $domain;
+				if ( $invalidIssuer || $invalidAudience ) return false;
 				
-			# Verify user-agent
+			# Validate user-agent
 				if ( $payload['user_agent'] !== $_SERVER['HTTP_USER_AGENT'] ) return false;
 
 		# Retrieve $hashedToken from database
