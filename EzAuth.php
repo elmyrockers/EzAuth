@@ -665,7 +665,10 @@ class EzAuth
 			exit;
 	}
 
-	
+	public function redirectLoggedInUser()
+	{
+		
+	}
 
 	public function logout()
 	{
