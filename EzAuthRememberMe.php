@@ -61,14 +61,15 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				$jwt = JWT::encode( $payload, $secretKey, 'HS256' );
 
 			# Encrypt it
-				$algorithm = 'aes-256-cbc';
+				$algorithm = 'aes-256-gcm';
 				$iv = openssl_random_pseudo_bytes( openssl_cipher_iv_length($algorithm) );
-				$encryptedJwt = openssl_encrypt( $jwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv );
+				$encryptedJwt = openssl_encrypt( $jwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv, $tag );
 
 				$encryptedJwtWithIv = base64_encode($iv.$encryptedJwt); // Combine both IV and encrypted JWT together
+				$tag = base64_encode($tag);
 
 			# Store it in cookie
-				return setcookie( 'auth_token', $encryptedJwtWithIv,[
+				return setcookie( 'auth_token', "{$encryptedJwtWithIv}.{$tag}",[
 					'expires' => $validIn7Days,
 					'path' => '/',
 					'samesite' => 'Strict',
@@ -83,18 +84,23 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 
 		# Retrieve $plainToken from cookie
 			# Retrieve encrypted JWT and IV from cookie
-				$encryptedJwtWithIv = $_COOKIE[ 'auth_token' ] ?? null;
-				if ( !$encryptedJwtWithIv ) return false;
+				$cookieValue = $_COOKIE[ 'auth_token' ] ?? null;
+				if ( !$cookieValue ) return false;
+
+				$cookieValue = explode( '.', $cookieValue );
+				if ( count($cookieValue)<2 ) return false;
 
 			# Decrypt it
-				$algorithm = 'aes-256-cbc';
+				$algorithm = 'aes-256-gcm';
 
-				$encryptedJwtWithIv = base64_decode( $encryptedJwtWithIv ); //Extract the 'IV' and 'encryptedJWT'
+				$encryptedJwtWithIv = base64_decode( $cookieValue[0] ); //Extract the 'IV' and 'encryptedJWT'
+				$tag = base64_decode( $cookieValue[1] ); //Extract the 'authentication tag'
+
 				$ivLength = openssl_cipher_iv_length($algorithm);
 				$iv = substr( $encryptedJwtWithIv, 0, $ivLength );
 				$encryptedJwt = substr( $encryptedJwtWithIv, $ivLength );
 
-				$jwt = openssl_decrypt( $encryptedJwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv );
+				$jwt = openssl_decrypt( $encryptedJwt, $algorithm, hex2bin($secretKey), OPENSSL_RAW_DATA, $iv, $tag );
 				if ( !$jwt ) return false;
 
 			# Decode and verify JWT signature
