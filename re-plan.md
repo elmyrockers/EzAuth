@@ -81,8 +81,6 @@ $config = [
 	]
 ];
 $auth = new EzAuth( $config );
-$csrfToken = $auth->csrfToken();
-$flash = $auth->flashMessage();
 
 list( $status, $flash, $csrfToken ) = $auth->register( $successCallback );
 list( $status, $flash ) = $auth->verifyEmail( $successCallback ) );
