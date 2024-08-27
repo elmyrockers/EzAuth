@@ -637,4 +637,31 @@ class EzAuth
 
 		return $user;
 	}
+
+	public function memberArea( $allowedRoles = [] )
+	{
+		# Make sure the user has logged in
+			$user = $this->isLoggedIn();
+			if ( !$user ) {// No access? Kick the user out!
+				$this->flash[ 'danger' ] = 'No access to member area!';
+				header( "Location: {$this->config['auth']['logout_redirect']}" ); exit;
+			}
+
+		# Make sure the user has permission to access page
+			$role = $user[ 'role' ];
+			if ( 
+				(is_scalar($allowedRoles) && $allowedRoles==$role) ||
+				(is_array($allowedRoles) && in_array($role,$allowedRoles))
+			) return $user;
+
+		# Don't have permission, kick the user to their member area
+			$memberArea = $this->config[ 'auth' ][ 'member_area' ];
+			if ( is_callable($memberArea) ){
+				$url = $memberArea( $user );
+				if (is_string($url)) header( "Location: {$url}" );
+			}
+			elseif ( is_string($memberArea) ) header( "Location: {$memberArea}" );
+			elseif ( is_array($memberArea) ) header( "Location: {$memberArea[$role]}" );
+			exit;
+	}
 }
