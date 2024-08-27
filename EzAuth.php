@@ -162,7 +162,7 @@ class EzAuth
 				}
 			}
 
-		return [ $status, $this->flash, 'csrfToken' ];
+		return [ $status, $this->flash, $this->_generateCsrfToken() ];
 	}
 
 	private function _sendMail( $to, $emailType, $vars, &$errorInfo ) // For register & recover_password
@@ -201,6 +201,22 @@ class EzAuth
 				return false;
 			}
 		return true;
+	}
+
+	private function _generateCsrfToken()
+	{
+		$csrfToken = bin2hex(random_bytes(32));
+		$csrfInput = "<input name='_csrf_token' type='hidden' value='{$csrfToken}'>";
+		$_SESSION[ '_csrf_token' ] = $csrfToken;
+
+		return $csrfInput;
+	}
+
+	public function _validateCsrfToken()
+	{
+		if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return false;
+		$csrfToken = $_POST[ '_csrf_token' ];
+		return $csrfToken === $_SESSION[ '_csrf_token' ];
 	}
 
 	public function flashMessage()
