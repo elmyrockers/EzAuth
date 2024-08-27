@@ -635,6 +635,9 @@ class EzAuth
 									'role' => $user[ 'role' ]
 									];
 
+		# Regenerate 'remember me' token
+			$this->remember->generateToken( $user );
+
 		return $user;
 	}
 
