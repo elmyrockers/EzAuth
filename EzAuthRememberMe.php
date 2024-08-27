@@ -132,4 +132,9 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 		# If success, get and return data about user details
 			return $remember->user;
 	}
+
+	public function removeToken():bool
+	{
+		
+	}
 }
