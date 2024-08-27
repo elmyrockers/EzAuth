@@ -135,6 +135,20 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 
 	public function removeToken():bool
 	{
-		
+		# Get user data
+			$user = $this->verifyToken();
+			if ( !$user ) return false;
+
+		# Remove $encryptedToken from cookie
+			setcookie( 'auth_token', '', 1000 );
+
+		# Remove $hashedToken from database
+			try {
+				R::trashAll( $user->ownRememberList );
+			} catch (\Exception $e) {
+				return false;
+			}
+
+		return true;
 	}
 }
