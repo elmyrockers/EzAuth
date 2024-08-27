@@ -13,6 +13,7 @@
 			<?=$flash ?>
 			<h1 class="h3">Reset Password</h1>
 			<form method="post">
+				<?=$csrfToken ?>
 				<div class="form-floating">
 					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" readonly value="<?=$user['email'] ?>">
 					<label for="floatingInput">Email Address</label>

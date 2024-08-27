@@ -13,6 +13,7 @@
 			<?=$flash ?>
 			<h1 class="h3">Recover Password</h1>
 			<form method="post">
+				<?=$csrfToken ?>
 				<div class="form-floating mb-4">
 					<input name="email" type="email" class="form-control" id="floatingInput" placeholder="Email Address" required value="test@gmail.com">
 					<label for="floatingInput">Email Address</label>
