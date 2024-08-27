@@ -692,7 +692,7 @@ class EzAuth
 			unset( $_SESSION[ 'auth' ] );
 
 		# Remove cookie from user's browser
-			// $this->remember->removeToken();
+			$this->remember->removeToken();
 		
 		# Redirect the user to other location and display message
 			$this->flash[ 'success' ] = 'You have successfully logged out!';
