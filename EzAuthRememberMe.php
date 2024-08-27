@@ -11,7 +11,7 @@ use Firebase\JWT\Key;
 class EzAuthRememberMe implements EzAuthRememberMeInterface
 {
 	private $config;
-	public function initialize(array $config )
+	public function initialize(array $config ):void
 	{
 		$this->config = $config;
 	}
