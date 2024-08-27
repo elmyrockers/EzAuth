@@ -677,6 +677,7 @@ class EzAuth
 	{
 		# Make sure the user has logged in
 			$user = $this->isLoggedIn();
+			
 			if ( !$user ) {// No access? Kick the user out!
 				$this->flash[ 'danger' ] = 'No access to member area!';
 				header( "Location: {$this->config['auth']['logout_redirect']}" ); exit;
@@ -685,6 +686,7 @@ class EzAuth
 		# Make sure the user has permission to access page
 			$role = $user[ 'role' ];
 			if ( 
+				(!$allowedRoles) ||
 				(is_scalar($allowedRoles) && $allowedRoles==$role) ||
 				(is_array($allowedRoles) && in_array($role,$allowedRoles))
 			) return $user;
