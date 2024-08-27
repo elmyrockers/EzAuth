@@ -26,20 +26,26 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 			$hashedToken = hash_hmac( 'sha256', $plainToken, $secretKey );
 
 		# Save $hashedToken into database
-			$rememberTable = $this->config[ 'database' ][ 'remember_table' ];
-			$remember = R::dispense( $rememberTable );
+			# Check existing data to determine whether it's insert or update
+				$rememberTable = $this->config[ 'database' ][ 'remember_table' ];
+				$remember = R::findOne( $rememberTable, 'user_id=?', [$user['id']] );
+				if ( !$remember ) {
+					$remember = R::dispense( $rememberTable );
+				}
 
-			$currentIsoDateTime = R::isoDateTime();
-			$remember[ 'user_id' ] = $user[ 'id' ];
-			$remember[ 'token' ] = $hashedToken;
-			$remember[ 'expires_at' ] = date( 'Y-m-d H:i:s', $validIn7Days );
-			$remember[ 'created' ] = $currentIsoDateTime;
-			$remember[ 'modified' ] = $currentIsoDateTime;
-			try {
-				R::store( $remember );
-			} catch (\Exception $e) {
-				return false;
-			}
+				$currentIsoDateTime = R::isoDateTime();
+				$remember[ 'user_id' ] = $user[ 'id' ];
+				$remember[ 'token' ] = $hashedToken;
+				$remember[ 'expires_at' ] = date( 'Y-m-d H:i:s', $validIn7Days );
+				$remember[ 'created' ] = $currentIsoDateTime;
+				$remember[ 'modified' ] = $currentIsoDateTime;
+
+			# Save it
+				try {
+					R::store( $remember );
+				} catch (\Exception $e) {
+					return false;
+				}
 			
 		# Store $plainToken into cookie
 			# Generate JSON Web Token (JWT)
