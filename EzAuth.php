@@ -219,11 +219,6 @@ class EzAuth
 		return $csrfToken === $_SESSION[ '_csrf_token' ];
 	}
 
-	public function flashMessage()
-	{
-		return $this->flash;
-	}
-
 	public function register( $callback = null )
 	{
 		# Make sure register form has been sent first
