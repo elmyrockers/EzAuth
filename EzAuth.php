@@ -667,7 +667,20 @@ class EzAuth
 
 	public function redirectLoggedInUser()
 	{
-		
+		# Check whether the user has logged-in
+			$user = $this->isLoggedIn();
+			if ( !$user ) return;
+
+		# If yes, then redirect the user to their member area
+			$role = $user[ 'role' ];
+			$memberArea = $this->config[ 'auth' ][ 'member_area' ];
+			if ( is_callable($memberArea) ){
+				$url = $memberArea( $user );
+				if (is_string($url)) header( "Location: {$url}" );
+			}
+			elseif ( is_string($memberArea) ) header( "Location: {$memberArea}" );
+			elseif ( is_array($memberArea) ) header( "Location: {$memberArea[$role]}" );
+			exit;
 	}
 
 	public function logout()
