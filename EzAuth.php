@@ -664,4 +664,19 @@ class EzAuth
 			elseif ( is_array($memberArea) ) header( "Location: {$memberArea[$role]}" );
 			exit;
 	}
+
+	
+
+	public function logout()
+	{
+		# Delete session
+			unset( $_SESSION[ 'auth' ] );
+
+		# Remove cookie from user's browser
+			// $this->remember->removeToken();
+		
+		# Redirect the user to other location and display message
+			$this->flash[ 'success' ] = 'You have successfully logged out!';
+			header( "Location: {$this->config['auth']['logout_redirect']}" ); exit;
+	}
 }
