@@ -229,6 +229,10 @@ class EzAuth
 		# Make sure register form has been sent first
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
+		# Validate CSRF Token
+			$pass = $this->_validateCsrfToken();
+			if ( !$pass ) return $this->_callback();
+
 		# Start form input validations. With 'illuminate/validation'
 			$signupFields = $this->config[ 'auth' ][ 'signup_fields' ];
 			
@@ -410,6 +414,10 @@ class EzAuth
 		# Make sure login form has been sent first
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
+		# Validate CSRF Token
+			$pass = $this->_validateCsrfToken();
+			if ( !$pass ) return $this->_callback();
+
 		# Sanitize 'ID Field'. Then, set validation rules
 			$userTable = $this->config['database']['user_table'];
 			$idField = $this->config[ 'auth' ][ 'id_field' ];
@@ -490,6 +498,10 @@ class EzAuth
 
 		# Make sure forgot password form has been sent first
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
+
+		# Validate CSRF Token
+			$pass = $this->_validateCsrfToken();
+			if ( !$pass ) return $this->_callback();
 
 		# Sanitize and validate
 			$email = filter_input( INPUT_POST, 'email', FILTER_SANITIZE_EMAIL );
@@ -601,6 +613,10 @@ class EzAuth
 		# 'Reset password' link is valid.--------------------------------------------------------------------------------------------------
 		# Make sure reset password form has been sent
 			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
+
+		# Validate CSRF Token
+			$pass = $this->_validateCsrfToken();
+			if ( !$pass ) return $this->_callback();
 
 		# Validate inputs
 			$validator = $this->validatorFactory->make( $_POST,[
