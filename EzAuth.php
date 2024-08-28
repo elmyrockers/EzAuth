@@ -298,10 +298,19 @@ class EzAuth
 
 
 		# If user's email has to be validated, generate confirmation code
-			$code = null; $email_verified = 1;
+			$secretKey = null;
+			$code = null;
+			$hashedCode = null;
+			$email_verified = 1;
+			
 			$verify_email = $this->config[ 'auth' ][ 'verify_email' ] ?? null;
 			if ( $verify_email ) {
+				// Make sure there is secret key
+					$secretKey = $this->config['auth']['secret_key'];
+					if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
+
 				$code = bin2hex(random_bytes(32));
+				$hashedCode = hash_hmac( 'sha256', $code, $secretKey );
 				$email_verified = 0;
 			}
 
@@ -309,7 +318,7 @@ class EzAuth
 			$userTable = $this->config[ 'database' ][ 'user_table' ];
 			$user = R::dispense( $userTable )->import( $inputs );
 			$user[ 'password' ] = password_hash( $user['password'], PASSWORD_DEFAULT ); // For password, store only its hash for security
-			$user[ 'code' ] = $code;
+			$user[ 'code' ] = $hashedCode;
 			$user[ 'email_verified' ] = $email_verified;
 			$user[ 'role' ] = 0;
 			$user[ 'login_attempt' ] = 0;
@@ -326,10 +335,6 @@ class EzAuth
 
 		# Send a link contain confirmation code to user's email
 			if ( $verify_email ) {
-				// Make sure there is secret key
-					$secretKey = $this->config['auth']['secret_key'];
-					if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
-					
 				// Generate token and verification link
 					$domain = $this->config[ 'auth' ][ 'domain' ];
 					$now = time();
@@ -401,7 +406,7 @@ class EzAuth
 			$userTable = $this->config['database']['user_table'];
 			$validator = $this->validatorFactory->make( $payload,[
 							'email' => "required|email|max:255|exists:{$userTable},email",
-							'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i'
+							'code' => 'required|size:64|regex:/^[a-f0-9]{64}$/i'
 						]);
 			if ( $validator->fails() ) {
 				// $messages = $validator->errors()->all();
@@ -416,7 +421,8 @@ class EzAuth
 			}
 
 		# Make sure the 'confirmation code' is valid
-			$invalid = $payload['code'] != $user['code'];
+			$emailCode = hash_hmac( 'sha256', $payload['code'], $secretKey );
+			$invalid = !hash_equals( $emailCode, $user['code'] );
 			if ( $invalid ) return $this->_callback( null, null, 'Invalid confirmation code.' );
 			
 
@@ -557,9 +563,10 @@ class EzAuth
 		# Generate confirmation link
 			# Generate confirmation code first
 				$code = bin2hex(random_bytes(32));
+				$hashedCode = hash_hmac( 'sha256', $code, $secretKey );
 
 			# Save the confirmation code into database
-				$user[ 'code' ] = $code;
+				$user[ 'code' ] = $hashedCode;
 				try {
 					R::store( $user );
 				} catch (\Exception $e) {
@@ -634,7 +641,7 @@ class EzAuth
 					$userTable = $this->config['database']['user_table'];
 					$validator = $this->validatorFactory->make( $payload,[
 									'email' => "required|email|max:255",
-									'code' => 'required|size:32|regex:/^[a-f0-9]{32}$/i'
+									'code' => 'required|size:64|regex:/^[a-f0-9]{64}$/i'
 								]);
 					if ( $validator->fails() ) {
 						return $this->_callback( null, null, 'Invalid reset password link.' );
@@ -645,7 +652,9 @@ class EzAuth
 						if ( !$user ) return $this->_callback( null, null, 'Invalid reset password link.' );
 
 					# Make sure the code is valid
-						if ( $payload['code'] != $user['code'] ) return $this->_callback( null, null, 'Invalid reset password link.' );
+						$emailCode = hash_hmac( 'sha256', $payload['code'], $secretKey );
+						$invalid = !hash_equals( $emailCode, $user['code'] );
+						if ( $invalid ) return $this->_callback( null, null, 'Invalid reset password link.' );
 
 		# 'Reset password' link is valid.--------------------------------------------------------------------------------------------------
 		# Make sure reset password form has been sent
