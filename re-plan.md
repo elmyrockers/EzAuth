@@ -16,18 +16,17 @@
 
 ### EXAMPLE:
 ```php
-$config = [
-	// Database
-	'database' => [
+// Database
+	$database = [
 		'dsn' =>  'mysql:host=localhost;dbname=ezauth',
 		'username' => 'root',
 		'password' => '',
 		'user_table' => 'user',
 		'remember_table' => 'remember'
-	],
+	];
 
-	// E-mail
-	'email' => [
+// E-mail
+	$email = [
 		'smtp_settings' => [
 			'debug' => false,
 			'host' => '',
@@ -43,19 +42,19 @@ $config = [
 			'email_verification' => [ 'subject', 'filename' ], // filename without extension (for html and plain text)
 			'reset_password' => [ 'subject', 'filename' ],
 		]
-	],
+	];
 
-	// Flash Message - (success / error)
-	'message' => [
+// Flash Message - (success / error)
+	$message = [
 		'language' => [ 'en', '/optional/path/to/language/directory/' ],
 		'template' => [
 			'success' => '<div class="alert alert-success">{{ message }}</div>',
 			'error' => '<div class="alert alert-danger">{{ message }}</div>'
 		]
-	],
+	];
 
-	// Authentication
-	'auth' => [
+// Authentication
+	$auth = [
 		'id_field' => 'email', // username / email / phone - follow table columns (its value must be unique)
 		'signup_fields' => [
 			'username' => [ 'required|string|min:3|max:20|alpha_dash|unique:user,username', FILTER_SANITIZE_FULL_SPECIAL_CHARS ],
@@ -78,18 +77,18 @@ $config = [
 		},
 		'verify_email' => '',  // Specify page for email verification
 		'reset_password' => '' // Specify page for reset password
-	]
-];
-$auth = new EzAuth( $config );
+	];
+$config = compact( 'database', 'email', 'message', 'auth' );
+$ezauth = new EzAuth( $config );
 
-list( $status, $flash, $csrfToken ) = $auth->register( $successCallback );
-list( $status, $flash ) = $auth->verifyEmail( $successCallback ) );
-list( $status, $flash, $csrfToken ) = $auth->login( $successCallback );
-list( $status, $flash, $csrfToken ) = $auth->recoverPassword( $successCallback );
-list( $status, $flash, $csrfToken ) = $auth->resetPassword( $successCallback, &$user, &$hasSent );
+list( $status, $flash, $csrfToken ) = $ezauth->register( $successCallback );
+list( $status, $flash ) = $ezauth->verifyEmail( $successCallback ) );
+list( $status, $flash, $csrfToken ) = $ezauth->login( $successCallback );
+list( $status, $flash, $csrfToken ) = $ezauth->recoverPassword( $successCallback );
+list( $status, $flash, $csrfToken ) = $ezauth->resetPassword( $successCallback, &$user, &$hasSent );
 
-$user = $auth->memberArea( $allowedRoles );
-$user = $auth->hasLoggedIn();
-$auth->redirectLoggedInUser();
-$auth->logout();
+$user = $ezauth->memberArea( $allowedRoles );
+$user = $ezauth->hasLoggedIn();
+$ezauth->redirectLoggedInUser();
+$ezauth->logout();
 ```
