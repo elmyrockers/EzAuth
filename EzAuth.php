@@ -713,7 +713,7 @@ class EzAuth
 	public function memberArea( $allowedRoles = [] )
 	{
 		# Make sure the user has logged in
-			$user = $this->isLoggedIn();
+			$user = $this->hasLoggedIn();
 			
 			if ( !$user ) {// No access? Kick the user out!
 				$this->flash[ 'danger' ] = 'No access to member area!';
@@ -742,7 +742,7 @@ class EzAuth
 	public function redirectLoggedInUser()
 	{
 		# Check whether the user has logged-in
-			$user = $this->isLoggedIn();
+			$user = $this->hasLoggedIn();
 			if ( !$user ) return;
 
 		# If yes, then redirect the user to their member area
