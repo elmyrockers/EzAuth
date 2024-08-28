@@ -86,7 +86,7 @@ list( $status, $flash, $csrfToken ) = $auth->register( $successCallback );
 list( $status, $flash ) = $auth->verifyEmail( $successCallback ) );
 list( $status, $flash, $csrfToken ) = $auth->login( $successCallback );
 list( $status, $flash, $csrfToken ) = $auth->recoverPassword( $successCallback );
-list( $status, $flash, $csrfToken ) = $auth->resetPassword( $successCallback, &$user );
+list( $status, $flash, $csrfToken ) = $auth->resetPassword( $successCallback, &$user, &$hasSent );
 
 $user = $auth->memberArea( $allowedRoles );
 $user = $auth->hasLoggedIn();
