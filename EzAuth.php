@@ -607,7 +607,7 @@ class EzAuth
 			return $this->_callback( $callback, $user );
 	}
 
-	public function resetPassword( $callback = null, &$user = null )
+	public function resetPassword( $callback = null, &$user = null, &$hasSent = false )
 	{
 		# Validate token
 			$token = $_GET[ 'token' ] ?? null;
@@ -659,6 +659,7 @@ class EzAuth
 		# 'Reset password' link is valid.--------------------------------------------------------------------------------------------------
 		# Make sure reset password form has been sent
 			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
+			$hasSent = true;
 
 		# Validate CSRF Token
 			$pass = $this->_validateCsrfToken();
