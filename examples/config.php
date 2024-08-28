@@ -30,12 +30,13 @@ Debug::enable();
 				'confirm_password' => [ 'required|same:password' ]
 			],
 
-			'logout_redirect' => '/auth/login/',
-			'member_area' => [
-				ROLE_USER => '/member/user/',
-				ROLE_ADMIN => '/member/admin/',
-				ROLE_SUPERADMIN => '/member/superadmin/'
-			],
+			'logout_redirect' => 'login.php',
+			// 'member_area' => [
+			// 	ROLE_USER => '/member/user/',
+			// 	ROLE_ADMIN => '/member/admin/',
+			// 	ROLE_SUPERADMIN => '/member/superadmin/'
+			// ],
+			'member_area' => 'member_area.php',
 			'verify_email' => 'verify_email.php',  // Specify page for email verification
 			// 'reset_password' => '', // Specify page for reset password
 			'reset_password' => 'reset_password.php', // Specify page for reset password
@@ -45,18 +46,3 @@ Debug::enable();
 			'secret_key' => '427a656ece850f275ae8fc5cc50b6d6a25b2b8b3b09925d6fab93cf062d015c8'
 	];
 	$ezauth = new EzAuth(compact( 'database', 'email', 'auth' ));
-
-
-
-
-
-
-// dump( $secretKey );
-	// $database[ 'remember_table' ] = 'remember';
-	// $auth[ 'domain' ] = 'localhost';
-	// $auth[ 'secret_key' ] = '427a656ece850f275ae8fc5cc50b6d6a25b2b8b3b09925d6fab93cf062d015c8';
-	// $user = R::findOne( 'user' );
-	// $remember = new elmyrockers\EzAuthRememberMe;
-	// $remember->initialize(compact( 'database', 'email', 'auth' ));
-	// $result = $remember->verifyToken();
-	// dump( $result );
