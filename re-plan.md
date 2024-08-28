@@ -89,7 +89,7 @@ list( $status, $flash, $csrfToken ) = $auth->recoverPassword( $successCallback )
 list( $status, $flash, $csrfToken ) = $auth->resetPassword( $successCallback, &$user );
 
 $user = $auth->memberArea( $allowedRoles );
-$user = $auth->isLoggedIn();
+$user = $auth->hasLoggedIn();
 $auth->redirectLoggedInUser();
 $auth->logout();
 ```

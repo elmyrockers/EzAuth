@@ -681,7 +681,7 @@ class EzAuth
 			return $this->_callback( $callback, $user );
 	}
 
-	public function isLoggedIn()
+	public function hasLoggedIn()
 	{
 		# Check whether the user's session exists
 			$auth = $_SESSION[ 'auth' ] ?? null;
