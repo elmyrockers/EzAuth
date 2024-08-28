@@ -301,7 +301,7 @@ class EzAuth
 			$code = null; $email_verified = 1;
 			$verify_email = $this->config[ 'auth' ][ 'verify_email' ] ?? null;
 			if ( $verify_email ) {
-				$code = bin2hex(random_bytes(16));
+				$code = bin2hex(random_bytes(32));
 				$email_verified = 0;
 			}
 
@@ -556,7 +556,7 @@ class EzAuth
 
 		# Generate confirmation link
 			# Generate confirmation code first
-				$code = bin2hex(random_bytes(16));
+				$code = bin2hex(random_bytes(32));
 
 			# Save the confirmation code into database
 				$user[ 'code' ] = $code;
