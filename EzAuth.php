@@ -219,6 +219,39 @@ class EzAuth
 		return $csrfToken === $_SESSION[ '_csrf_token' ];
 	}
 
+	private function _checkLoginAttempts( $user )
+	{
+		$lastAttempt = new \DateTime( $user->last_attempt );
+		$lastWaitingTime = $lastAttempt->add( new \DateInterval('PT1H') )->getTimestamp();
+		$hasWaitedAnHour = time() > $lastWaitingTime;
+		if ( $hasWaitedAnHour && $user->login_attempt ) {
+			$this->_incrementLoginAttempt( true, $user ); // Reset login attempt
+		}
+
+		$reachedMaxAttempts = $user->login_attempt >= 20;
+		if ( $reachedMaxAttempts ) return false;
+		return true;
+	}
+
+	private function _incrementLoginAttempt( $status, $user )
+	{
+		$now = R::isoDateTime();
+		if ( !$status ) {
+			# Count login attempt
+				$user->login_attempt++;
+				$user->last_attempt = $now;
+				$user->modified = $now;
+				R::store( $user );
+			return;
+		}
+
+		# Reset login attempt
+			$user->login_attempt = 0;
+			$user->last_attempt = '1970-01-01 00:00:00';
+			$user->modified = $now;
+			R::store( $user );
+	}
+
 	public function register( $callback = null )
 	{
 		# Make sure register form has been sent first
@@ -273,11 +306,14 @@ class EzAuth
 			}
 
 		# Save user data into 'user' table in database
-			$user = R::dispense( 'user' )->import( $inputs );
+			$userTable = $this->config[ 'database' ][ 'user_table' ];
+			$user = R::dispense( $userTable )->import( $inputs );
 			$user[ 'password' ] = password_hash( $user['password'], PASSWORD_DEFAULT ); // For password, store only its hash for security
 			$user[ 'code' ] = $code;
 			$user[ 'email_verified' ] = $email_verified;
 			$user[ 'role' ] = 0;
+			$user[ 'login_attempt' ] = 0;
+			$user[ 'last_attempt' ] = '1970-01-01 00:00:00';
 
 			$now = R::isoDateTime();
 			$user[ 'created' ] = $now;
@@ -440,9 +476,15 @@ class EzAuth
 			$unverifiedEmail = empty($user['email_verified']);
 			if ( $unverifiedEmail ) return $this->_callback( null, null, 'Unverified email' );
 
+			# Check login attempt
+			$blocked = !$this->_checkLoginAttempts( $user );
+			if ( $blocked ) return $this->_callback( null, null, 'Too many login attempts. Please try again after an hour.' );
+
+
 		# Verify password
-			$invalidPassword = !password_verify( $_POST['password'], $user['password'] );
-			if ( $invalidPassword ) return $this->_callback( null, null, 'Invalid password' );
+			$valid = password_verify( $_POST['password'], $user['password'] );
+			$this->_incrementLoginAttempt( $valid, $user );
+			if ( !$valid ) return $this->_callback( null, null, 'Invalid password' );
 
 		# Give the user permission to access member area (access card)
 			$_SESSION[ 'auth' ] = [
