@@ -81,6 +81,13 @@
 $config = compact( 'database', 'email', 'message', 'auth' );
 $ezauth = new EzAuth( $config );
 
+$csrfToken = $ezauth->csrfToken();
+$flash = $ezauth->flashMessage();
+
+// When csrfToken() and flashMessage() are called,
+// method like register() will return only single data: $status
+	$status = $ezauth->register( $successCallback );
+
 list( $status, $flash, $csrfToken ) = $ezauth->register( $successCallback );
 list( $status, $flash ) = $ezauth->verifyEmail( $successCallback ) );
 list( $status, $flash, $csrfToken ) = $ezauth->login( $successCallback );
