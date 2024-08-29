@@ -365,7 +365,7 @@ class EzAuth
 					} catch (\Exception $e ) {
 						return $this->_callback( null, null, "Error: Failed to create token. {$e->getMessage()}" );
 					}
-					$verificationLink = "{$domain}/{$verify_email}?token={$token}";
+					$verificationLink = "{$domain}{$verify_email}?token={$token}";
 
 				// Send email
 					$to[] = $user['email'];
@@ -601,7 +601,7 @@ class EzAuth
 				} catch (\Exception $e ) {
 					return $this->_callback( null, null, "Error: {$e->getMessage()}" );
 				}
-				$resetPasswordLink = "{$domain}/{$resetPassword}?token={$token}";
+				$resetPasswordLink = "{$domain}{$resetPassword}?token={$token}";
 
 		# Send it to user's email
 			$to[] = $user['email'];
