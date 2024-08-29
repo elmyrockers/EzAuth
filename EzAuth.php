@@ -35,6 +35,8 @@ class EzAuth
 	private $validatorFactory;
 	private $remember;
 
+	private $hasGeneratedToken = false;
+
 	public function __construct( $config )
 	{
 		$this->config = $config;
@@ -162,7 +164,7 @@ class EzAuth
 				}
 			}
 
-		return [ $status, $this->flash, $this->_generateCsrfToken() ];
+		return [ $status, $this->flash, $this->csrfToken() ];
 	}
 
 	private function _sendMail( $to, $emailType, $vars, &$errorInfo ) // For register & recover_password
@@ -203,21 +205,6 @@ class EzAuth
 		return true;
 	}
 
-	private function _generateCsrfToken()
-	{
-		$csrfToken = bin2hex(random_bytes(32));
-		$csrfInput = "<input name='_csrf_token' type='hidden' value='{$csrfToken}'>";
-		$_SESSION[ '_csrf_token' ] = $csrfToken;
-
-		return $csrfInput;
-	}
-
-	public function _validateCsrfToken()
-	{
-		if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return false;
-		$csrfToken = $_POST[ '_csrf_token' ];
-		return $csrfToken === $_SESSION[ '_csrf_token' ];
-	}
 
 	private function _checkLoginAttempts( $user )
 	{
@@ -250,6 +237,28 @@ class EzAuth
 			$user->last_attempt = '1970-01-01 00:00:00';
 			$user->modified = $now;
 			R::store( $user );
+	}
+
+	public function _validateCsrfToken()
+	{
+		if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return false;
+		$csrfToken = $_POST[ '_csrf_token' ];
+		return $csrfToken === $_SESSION[ '_csrf_token' ];
+	}
+
+	public function csrfToken()
+	{
+		$csrfToken = bin2hex(random_bytes(32));
+		$csrfInput = "<input name='_csrf_token' type='hidden' value='{$csrfToken}'>";
+		$_SESSION[ '_csrf_token' ] = $csrfToken;
+		$this->hasGeneratedToken = true;
+
+		return $csrfInput;
+	}
+
+	public function flashMessage()
+	{
+		return $this->flash;
 	}
 
 	public function register( $callback = null )
