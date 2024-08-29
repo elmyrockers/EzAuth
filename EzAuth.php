@@ -164,6 +164,8 @@ class EzAuth
 				}
 			}
 
+		if ( $this->hasGeneratedToken ) return $status;
+
 		return [ $status, $this->flash, $this->csrfToken() ];
 	}
 
