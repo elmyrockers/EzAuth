@@ -35,6 +35,7 @@ class EzAuth
 	private $validatorFactory;
 	private $remember;
 
+	private $isCsrfValid = false;
 	private $hasGeneratedToken = false;
 
 	public function __construct( $config )
@@ -137,6 +138,9 @@ class EzAuth
 
 		// Make sure session has been started
 			if ( !session_id() ) session_start();
+
+		// Validate CSRF Token
+			$this->isCsrfValid = $this->_validateCsrfToken();
 
 		// Extend default class for remember me feature
 			$this->extendRememberMe( new EzAuthRememberMe );
@@ -269,8 +273,7 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			$pass = $this->_validateCsrfToken();
-			if ( !$pass ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Start form input validations. With 'illuminate/validation'
 			$signupFields = $this->config[ 'auth' ][ 'signup_fields' ];
@@ -463,8 +466,7 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			$pass = $this->_validateCsrfToken();
-			if ( !$pass ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Sanitize 'ID Field'. Then, set validation rules
 			$userTable = $this->config['database']['user_table'];
@@ -554,8 +556,7 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			$pass = $this->_validateCsrfToken();
-			if ( !$pass ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Sanitize and validate
 			$email = filter_input( INPUT_POST, 'email', FILTER_SANITIZE_EMAIL );
@@ -673,8 +674,7 @@ class EzAuth
 			$hasSent = true;
 
 		# Validate CSRF Token
-			$pass = $this->_validateCsrfToken();
-			if ( !$pass ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Validate inputs
 			$validator = $this->validatorFactory->make( $_POST,[
