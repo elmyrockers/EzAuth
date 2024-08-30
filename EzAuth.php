@@ -157,15 +157,14 @@ class EzAuth
 				$status = true;
 			}
 
-		//Redirect to
-			if ( is_string($callback) && !empty($callback) ) { // string
-				header( "Location: $callback" ); exit;
 		//Callback
-			} elseif ( is_callable($callback) ) { // callable
+			if ( is_callable($callback) ) { // callable
 				$url = $callback( $user );//redirect to
 				if ( is_string($url) ) {
 					header( "Location: $url" ); exit;
 				}
+			} elseif ( is_string($callback) && !empty($callback) ) { // string
+				header( "Location: $callback" ); exit;
 			}
 
 		if ( $this->hasGeneratedToken ) return $status;
