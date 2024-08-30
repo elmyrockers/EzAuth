@@ -247,7 +247,7 @@ class EzAuth
 	public function _validateCsrfToken()
 	{
 		if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return false;
-		$csrfToken = $_POST[ '_csrf_token' ];
+		$csrfToken = $_POST[ '_csrf_token' ] ?? null;
 		return $csrfToken === $_SESSION[ '_csrf_token' ];
 	}
 
