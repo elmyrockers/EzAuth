@@ -153,7 +153,7 @@ class EzAuth
 			if ( $errorInfo ) {
 				$this->flash[ 'danger' ] = $errorInfo;
 				$status = false;
-			} elseif ( $callback ) {
+			} elseif ( $user ) {
 				$status = true;
 			}
 
