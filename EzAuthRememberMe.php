@@ -27,14 +27,15 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 
 		# Save $hashedToken into database
 			# Check existing data to determine whether it's insert or update
+				$userID = "{$this->config[ 'database' ][ 'user_table' ]}_id";
 				$rememberTable = $this->config[ 'database' ][ 'remember_table' ];
-				$remember = R::findOne( $rememberTable, 'user_id=?', [$user['id']] );
+				$remember = R::findOne( $rememberTable, "{$userID}=?", [$user['id']] );
 				if ( !$remember ) {
 					$remember = R::dispense( $rememberTable );
 				}
 
 				$currentIsoDateTime = R::isoDateTime();
-				$remember[ 'user_id' ] = $user[ 'id' ];
+				$remember[ $userID ] = $user[ 'id' ];
 				$remember[ 'token' ] = $hashedToken;
 				$remember[ 'expires_at' ] = date( 'Y-m-d H:i:s', $validIn7Days );
 				$remember[ 'created' ] = $currentIsoDateTime;
@@ -54,7 +55,7 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 					'iss' => $domain,
 					'aud' => $domain,
 					'token' => $plainToken,
-					'user_id' => $user[ 'id' ],
+					$userID => $user[ 'id' ],
 					'user_agent' => $_SERVER['HTTP_USER_AGENT'],
 					'exp' => $validIn7Days // Expire in 7 days
 				];
@@ -120,8 +121,10 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 				if ( $payload['user_agent'] !== $_SERVER['HTTP_USER_AGENT'] ) return false;
 
 		# Retrieve $hashedToken from database
+			$userTable = $this->config[ 'database' ][ 'user_table' ];
+			$userID = "{$userTable}_id";
 			$rememberTable = $this->config[ 'database' ][ 'remember_table' ];
-			$remember = R::findOne( $rememberTable, 'user_id=?', [$payload['user_id']] );
+			$remember = R::findOne( $rememberTable, "{$userID}=?", [$payload[$userID]] );
 			if ( !$remember ) return false;
 
 		# Compare $plainToken and $hashedToken
@@ -130,7 +133,7 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 			if ( !hash_equals($cookieToken,$dbToken) ) return false;
 
 		# If success, get and return data about user details
-			return $remember->user;
+			return $remember->$userTable;
 	}
 
 	public function removeToken():bool
@@ -143,8 +146,10 @@ class EzAuthRememberMe implements EzAuthRememberMeInterface
 			setcookie( 'auth_token', '', 1000 );
 
 		# Remove $hashedToken from database
+			$rememberTable = ucfirst($this->config[ 'database' ][ 'remember_table' ]);
 			try {
-				R::trashAll( $user->ownRememberList );
+				$remember = "own{$rememberTable}List";
+				R::trashAll( $user->$remember );
 			} catch (\Exception $e) {
 				return false;
 			}
