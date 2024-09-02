@@ -1,8 +1,8 @@
 <?php
 require_once '../vendor/autoload.php';
 use elmyrockers\EzAuth;
-use \RedBeanPHP\R as R;
 use Symfony\Component\ErrorHandler\Debug;
+
 Debug::enable();
 
 
