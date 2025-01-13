@@ -98,6 +98,6 @@ $user = $ezauth->memberArea( $allowedRoles );
 $user = $ezauth->hasLoggedIn();
 $ezauth->redirectLoggedInUser();
 list( $status, $flash, $csrfToken ) = $ezauth->updatePassword( $successCallback );
-$ezauth->updatePasswordAsync();
+list( $status, $flash, $csrfToken ) = $ezauth->updatePasswordAsync();
 $ezauth->logout();
 ```
