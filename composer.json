@@ -10,7 +10,7 @@
 	],
 	"description": "EzAuth PHP library - Lightweight & easy authentication library with secure 'remember me' feature for PHP. With this, you just need to write a few lines of PHP code only in each pages.",
 	"type": "library",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"require": {
 		"php": ">=7.4",
 		"phpmailer/phpmailer": "^6.9",
