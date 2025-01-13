@@ -1,5 +1,5 @@
 <?php
-namespace elmyrockers;
+namespace elmyrockers\old_version;
 //NotORM - For database handling and manipulation
 //Smarty - for email body template and
 //PHPMailer - to send email
