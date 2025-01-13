@@ -687,7 +687,7 @@ class EzAuth
 			}
 
 		# Then, reset value in 'password' column
-			$userTable = $this->config['database']['user_table'];
+			// $userTable = $this->config['database']['user_table'];
 			$user[ 'password' ] = password_hash( $_POST['password'], PASSWORD_DEFAULT ); // Store only its hash for security
 			$user[ 'email_verified' ] = 1;
 			try {
@@ -776,6 +776,51 @@ class EzAuth
 			elseif ( is_array($memberArea) ) header( "Location: {$memberArea[$role]}" );
 			exit;
 	}
+
+	public function updatePassword( $callback = null ) // need current_password, new_password, confirm_password inputs
+	{
+		# Make sure the user has logged in
+			$user = $this->hasLoggedIn();
+			if ( !$user ) return $this->_callback();
+
+		# Make sure update password form has been sent
+			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
+			$hasSent = true;
+
+		# Validate CSRF Token
+			if ( !$this->isCsrfValid ) return $this->_callback();
+
+		# Validate inputs
+			$validator = $this->validatorFactory->make( $_POST,[
+							'current_password' => ['required','string','min:8'],
+							'new_password' => ['required','string','min:8','regex:/[!@#$%^&*(),.?":{}|<>]/'],
+							'confirm_password' => 'required|same:new_password'
+						]);
+			if ( $validator->fails() ) {
+				$errors = $validator->errors()->all();
+				$errors = join( '<br>', $errors );
+				return $this->_callback( null, null, $errors );
+			}
+
+		# Make sure current password is valid
+			$valid = password_verify( $_POST['current_password'], $user['password']);
+			if ( !$valid ) return $this->_callback( null, null, "Invalid password" );
+
+
+		# Then, reset value in 'password' column
+			$user[ 'password' ] = password_hash( $_POST['new_password'], PASSWORD_DEFAULT ); // Store only its hash for security
+			try {
+				R::store( $user );
+			} catch (\Exception $e) {
+				return $this->_callback( null, null, "Failed to update your password." );
+			}
+
+		# Redirect user or execute callback
+			$this->flash[ 'success' ] = 'Your password was successfully changed';
+			return $this->_callback( $callback, $user );
+	}
+
+	public function updatePasswordAsync(){}
 
 	public function logout()
 	{
