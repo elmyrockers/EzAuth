@@ -3,8 +3,8 @@ require_once 'config.php';
 $user = $ezauth->memberArea();
 
 
-list(, $flash, $csrfToken ) = $ezauth->updatePassword();
+list( $status, $flash, $csrfToken ) = $ezauth->updatePassword();
 
-// dump( $user );
+// dump( $status, $flash, $csrfToken );
 
 include 'forms/update_password_form.php';
