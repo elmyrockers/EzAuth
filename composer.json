@@ -25,7 +25,10 @@
 	"autoload": {
 		"psr-4": {
 			"elmyrockers\\": ""
-		}
+		},
+		"exclude-from-classmap": [
+        	"vendor/elmyrockers/ezauth/old_version/*"
+    	]
 	},
 	"minimum-stability": "stable",
 	"license": "MIT",
