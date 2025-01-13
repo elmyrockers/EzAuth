@@ -785,7 +785,6 @@ class EzAuth
 
 		# Make sure update password form has been sent
 			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
-			$hasSent = true;
 
 		# Validate CSRF Token
 			if ( !$this->isCsrfValid ) return $this->_callback();
@@ -820,7 +819,60 @@ class EzAuth
 			return $this->_callback( $callback, $user );
 	}
 
-	public function updatePasswordAsync(){}
+	public function updatePasswordAsync()
+	{
+		# Make sure the user has logged in
+			$user = $this->hasLoggedIn();
+			if ( !$user ) return $this->_callback();
+
+		# Make sure update password form has been sent
+			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
+			header( 'Content-Type: application/json' );
+			$result = false;
+			$message = '';
+			$response[ 'result' ] =& $result;
+			$response[ 'message' ] =& $message;
+			
+
+		# Validate CSRF Token
+			// if ( !$this->isCsrfValid ) return $this->_callback();
+			if ( !$this->isCsrfValid ) {
+				$message = 'Invalid CSRF Token';
+				echo json_encode($response); exit;
+			}
+
+		# Validate inputs
+			$validator = $this->validatorFactory->make( $_POST,[
+							'current_password' => ['required','string','min:8'],
+							'new_password' => ['required','string','min:8','regex:/[!@#$%^&*(),.?":{}|<>]/'],
+							'confirm_password' => 'required|same:new_password'
+						]);
+			if ( $validator->fails() ) {
+				$message = 'Form validation failed';
+				echo json_encode($response); exit;
+			}
+
+		# Make sure current password is valid
+			$valid = password_verify( $_POST['current_password'], $user['password']);
+			if ( !$valid ) {
+				$message = 'Invalid Password';
+				echo json_encode($response); exit;
+			}
+
+		# Then, reset value in 'password' column
+			$user[ 'password' ] = password_hash( $_POST['new_password'], PASSWORD_DEFAULT ); // Store only its hash for security
+			try {
+				R::store( $user );
+			} catch (\Exception $e) {
+				$message = 'Failed to update your password.';
+				echo json_encode($response); exit;
+			}
+
+		# Redirect user or execute callback
+			$result = true;
+			$message = 'Your password was successfully changed';
+			echo json_encode($response); exit;
+	}
 
 	public function logout()
 	{
