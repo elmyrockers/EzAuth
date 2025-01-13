@@ -30,7 +30,7 @@
 				</div>
 				<button class="w-100 btn btn-lg" type="submit">Sign in</button>
 			</form>
-			<p class="copyright">&copy; 2024 EzAuth</p>
+			<p class="copyright">&copy; 2025 EzAuth</p>
 		</main>
 	</body>
 </html>
