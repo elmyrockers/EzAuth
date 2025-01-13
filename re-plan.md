@@ -97,7 +97,7 @@ list( $status, $flash, $csrfToken ) = $ezauth->resetPassword( $successCallback, 
 $user = $ezauth->memberArea( $allowedRoles );
 $user = $ezauth->hasLoggedIn();
 $ezauth->redirectLoggedInUser();
-$ezauth->updatePassword();
+list( $status, $flash, $csrfToken ) = $ezauth->updatePassword( $successCallback );
 $ezauth->updatePasswordAsync();
 $ezauth->logout();
 ```
