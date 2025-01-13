@@ -37,7 +37,7 @@ Debug::enable();
 			// 	ROLE_SUPERADMIN => '/member/superadmin/'
 			// ],
 			'member_area' => 'member_area.php',
-			'verify_email' => 'verify_email.php',  // Specify page for email verification
+			'verify_email' => '/verify_email.php',  // Specify page for email verification
 			// 'reset_password' => '', // Specify page for reset password
 			'reset_password' => 'reset_password.php', // Specify page for reset password
 
