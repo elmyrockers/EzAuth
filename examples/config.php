@@ -3,7 +3,7 @@ require_once '../vendor/autoload.php';
 use elmyrockers\EzAuth;
 use Symfony\Component\ErrorHandler\Debug;
 
-// Debug::enable();
+Debug::enable();
 
 
 
