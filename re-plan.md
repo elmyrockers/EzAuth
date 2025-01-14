@@ -84,8 +84,9 @@ $ezauth = new EzAuth( $config );
 $csrfToken = $ezauth->csrfToken();
 $flash = $ezauth->flashMessage();
 
-// When csrfToken() and flashMessage() are called,
-// method like register() will return only single data: $status
+$csrfToken = $ezauth->csrfToken( false ); //Disable CSRF token generation
+
+// When csrfToken() or csrfToken(false) is called, method like register() will return only single data: $status
 	$status = $ezauth->register( $successCallback );
 
 list( $status, $flash, $csrfToken ) = $ezauth->register( $successCallback );
