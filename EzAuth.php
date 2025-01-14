@@ -35,7 +35,6 @@ class EzAuth
 	private $validatorFactory;
 	private $remember;
 
-	private $enableCsrfTokenGenerated = true;
 	private $isCsrfValid = false;
 	private $hasGeneratedToken = false;
 
@@ -168,7 +167,7 @@ class EzAuth
 				header( "Location: $callback" ); exit;
 			}
 
-		if ( !$this->enableCsrfTokenGenerated || $this->hasGeneratedToken ) return $status;
+		if ( $this->hasGeneratedToken ) return $status;
 
 		return [ $status, $this->flash, $this->csrfToken() ];
 	}
@@ -254,10 +253,6 @@ class EzAuth
 
 	public function csrfToken( $enable = true )
 	{
-		if ( !$enable ) {
-			$this->enableCsrfTokenGenerated = false; return;
-		}
-
 		$csrfToken = bin2hex(random_bytes(32));
 		$csrfInput = "<input name='_csrf_token' type='hidden' value='{$csrfToken}'>";
 		$_SESSION[ '_csrf_token' ] = $csrfToken;
@@ -277,7 +272,7 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			if ( $this->enableCsrfTokenGenerated && !$this->isCsrfValid ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Start form input validations. With 'illuminate/validation'
 			$signupFields = $this->config[ 'auth' ][ 'signup_fields' ];
@@ -396,7 +391,7 @@ class EzAuth
 		# Validate token
 			$token = $_GET[ 'token' ] ?? null;
 			if ( !$token ) throw new \Exception( "Token does not exist" );
-			
+
 			// Make sure there is secret key
 				$secretKey = $this->config['auth']['secret_key'];
 				if ( !$secretKey ) throw new \Exception( 'Missing secret key' );
@@ -470,7 +465,7 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			if ( $this->enableCsrfTokenGenerated && !$this->isCsrfValid ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Sanitize 'ID Field'. Then, set validation rules
 			$userTable = $this->config['database']['user_table'];
@@ -560,7 +555,7 @@ class EzAuth
 			if ( $_SERVER[ 'REQUEST_METHOD' ] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			if ( $this->enableCsrfTokenGenerated && !$this->isCsrfValid ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Sanitize and validate
 			$email = filter_input( INPUT_POST, 'email', FILTER_SANITIZE_EMAIL );
@@ -678,7 +673,7 @@ class EzAuth
 			$hasSent = true;
 
 		# Validate CSRF Token
-			if ( $this->enableCsrfTokenGenerated && !$this->isCsrfValid ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Validate inputs
 			$validator = $this->validatorFactory->make( $_POST,[
@@ -792,7 +787,7 @@ class EzAuth
 			if ( $_SERVER['REQUEST_METHOD'] != 'POST' ) return $this->_callback();
 
 		# Validate CSRF Token
-			if ( $this->enableCsrfTokenGenerated && !$this->isCsrfValid ) return $this->_callback();
+			if ( !$this->isCsrfValid ) return $this->_callback();
 
 		# Validate inputs
 			$validator = $this->validatorFactory->make( $_POST,[
@@ -840,8 +835,7 @@ class EzAuth
 			
 
 		# Validate CSRF Token
-			// if ( !$this->isCsrfValid ) return $this->_callback();
-			if ( $this->enableCsrfTokenGenerated && !$this->isCsrfValid ) {
+			if ( !$this->isCsrfValid ) {
 				$message = 'Invalid CSRF Token';
 				echo json_encode($response); exit;
 			}
