@@ -1,5 +1,5 @@
 
-# EzAuth (Work In Progress)
+# EzAuth (Experimental)
 
 Lightweight & easy authentication library with secure 'remember me' feature for PHP. With this, you just need to write a few lines of PHP code only in each pages.
 
@@ -10,39 +10,18 @@ Install the EzAuth package using Composer:
 ```sh
 composer require elmyrockers/ezauth
 ```
-#### 2.  Include Composer's Autoloader:
-Include Composer's autoloader script in your project:
-```php
-<?php
-require_once 'vendor/autoload.php';
-```
-#### 3. Using EzAuth Package:
-Import the `EzAuth` class from the `elmyrockers\EzAuth` namespace:
-```php
-use elmyrockers\EzAuth;
-```
-#### 4. Configuration:
-Create an array contain configuration for our authentication:
-```php
-$config = [];
-```
-#### 5. EzAuth Object:
-Instantiate a new `EzAuth` object, passing the configuration array as an argument.
-```php
-$auth = new EzAuth( $config );
-```
-#### 6. bootstrap.php:
-Save the code as `bootstrap.php`. The complete code for this file should look like this:
+#### 2. bootstrap.php:
+Create `bootstrap.php` file. The complete code for this file should look like this:
 ```php
 // bootstrap.php
 <?php
 require_once 'vendor/autoload.php'; //Include composer's autoloader
 use elmyrockers\EzAuth; // Use EzAuth package
 
-$config = []; // Configuration
-$auth = new EzAuth( $config );
+$config = []; // Create an array contain configuration for our authentication
+$auth = new EzAuth( $config ); // Instantiate a new `EzAuth` object, passing the configuration array as an argument.
 ```
-#### 7. Register Form:
+#### 3. Register Form:
 Create a file named `register_form.php` containing the following HTML form. This form includes Bootstrap 5 for styling (you can replace it with your preferred framework).
 ```html
 <!-- register_form.php -->
@@ -83,7 +62,7 @@ Create a file named `register_form.php` containing the following HTML form. This
 	</div>
 </form>
 ```
-#### 8. register.php:
+#### 4. register.php:
 Create a file named `register.php` with the following code. It includes `bootstrap.php` and retrieves flash messages and the CSRF token from the `EzAuth` object before displaying the registration form.
 ```php
 // register.php
